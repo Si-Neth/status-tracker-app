@@ -1,0 +1,1454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT Follow-up Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f3f5f7;--surface:#ffffff;--surface-2:#eef1f4;--line:#dde2e8;--grid:#e8ecf0;
+  --ink:#141a22;--ink-2:#4b5563;--ink-3:#7a8491;
+  --accent:#0f6e78;--accent-soft:#dff0f1;
+  --s-done:#2f8a4e;--s-prog:#2a78d6;--s-wait:#c98500;--s-new:#8b93a1;--s-hold:#7b5ea7;--s-unset:#cfd5dc;
+  --crit:#c93b3b;--crit-soft:#fbe5e5;--warn-soft:#fdf1d8;--good-soft:#e2f2e7;--prog-soft:#e3eefb;
+  --sans:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0f1318;--surface:#171d24;--surface-2:#1e252e;--line:#2a333e;--grid:#232b35;
+  --ink:#eef2f6;--ink-2:#b3bcc7;--ink-3:#8590a0;
+  --accent:#4fb8c2;--accent-soft:#16363a;
+  --s-done:#3fa463;--s-prog:#3987e5;--s-wait:#d69a1a;--s-new:#7d8696;--s-hold:#9a80c9;--s-unset:#3a4450;
+  --crit:#e66767;--crit-soft:#3a1f22;--warn-soft:#3a2f14;--good-soft:#17321f;--prog-soft:#172a42;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0f1318;--surface:#171d24;--surface-2:#1e252e;--line:#2a333e;--grid:#232b35;
+  --ink:#eef2f6;--ink-2:#b3bcc7;--ink-3:#8590a0;
+  --accent:#4fb8c2;--accent-soft:#16363a;
+  --s-done:#3fa463;--s-prog:#3987e5;--s-wait:#d69a1a;--s-new:#7d8696;--s-hold:#9a80c9;--s-unset:#3a4450;
+  --crit:#e66767;--crit-soft:#3a1f22;--warn-soft:#3a2f14;--good-soft:#17321f;--prog-soft:#172a42;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;margin:0}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:20px;padding-block:24px 48px;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.sub{color:var(--ink-2);margin-top:4px}
+.asof{font-family:var(--mono);font-size:12px;color:var(--ink-3);text-align:right}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:600}
+h2{font-size:15px;font-weight:600;margin:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.note{font-size:12px;color:var(--ink-3)}
+
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:600}
+select,input[type=search]{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;max-width:100%}
+input[type=search]{width:220px}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn{font:inherit;font-size:13px;background:transparent;color:var(--accent);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer}
+.btn:hover{background:var(--accent-soft)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;border:0;background:var(--surface);color:var(--ink-2);padding:7px 11px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:2px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.kpi:hover{border-color:var(--accent)}
+.kpi[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.kpi .v{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi .l{font-size:12px;color:var(--ink-2)}
+.kpi .m{font-size:11px;color:var(--ink-3);font-family:var(--mono)}
+.kpi.crit .v{color:var(--crit)}
+.kpi .bar{height:4px;border-radius:2px;background:var(--surface-2);margin-top:8px;overflow:hidden}
+.kpi .bar i{display:block;height:100%;background:var(--s-done)}
+
+.grid2{display:grid;align-items:start;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px}
+.grid3{display:grid;align-items:start;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+
+/* charts */
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink-2);margin-bottom:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block;flex:none}
+.hrow{display:grid;grid-template-columns:76px minmax(0,1fr) 36px;align-items:center;gap:10px;padding:3px 0;cursor:pointer;border-radius:4px}
+.hrow:hover .lab{color:var(--accent)}
+.hrow.sel .lab{color:var(--accent);font-weight:700}
+.lab{font-size:12px;font-weight:600;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{display:flex;gap:2px;height:18px;position:relative}
+.track i{display:block;height:100%;min-width:3px}
+.track i:first-child{border-radius:3px 0 0 3px}
+.track i:last-child{border-radius:0 4px 4px 0}
+.track i:only-child{border-radius:3px 4px 4px 3px}
+.cnt{font-family:var(--mono);font-size:12px;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+.axis{display:grid;grid-template-columns:76px minmax(0,1fr) 36px;gap:10px;margin-top:4px}
+.axis .ticks{position:relative;height:14px;border-top:1px solid var(--grid)}
+.axis .ticks span{position:absolute;top:2px;font-family:var(--mono);font-size:10px;color:var(--ink-3);transform:translateX(-50%)}
+.empty{color:var(--ink-3);font-size:13px;padding:16px 0}
+
+/* timeline */
+.tl{display:flex;align-items:flex-end;gap:6px;height:150px;padding-top:18px;border-bottom:1px solid var(--line);position:relative}
+.tl .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;height:100%;position:relative;min-width:0}
+.tl .col i{display:block;width:100%;}
+.tl .col i:first-child{border-radius:4px 4px 0 0}
+.tl .col .gap{height:2px;background:transparent}
+.tl .col b{position:absolute;left:0;right:0;text-align:center;font-family:var(--mono);font-size:11px;color:var(--ink-2);font-weight:400}
+.tlx{display:flex;gap:6px;margin-top:4px}
+.tlx span{flex:1;text-align:center;font-family:var(--mono);font-size:10px;color:var(--ink-3);min-width:0}
+.tlx span.now{color:var(--accent);font-weight:600}
+
+/* attention list */
+.att{display:flex;flex-direction:column}
+#blocked{max-height:520px;overflow-y:auto;padding-right:4px}
+.att-item{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:10px;align-items:start;padding:9px 0;border-top:1px solid var(--grid)}
+.att-item:first-child{border-top:0}
+.days{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--crit);background:var(--crit-soft);border-radius:4px;padding:3px 6px;text-align:center}
+.att-d{font-size:13px}
+.att-m{font-size:11px;color:var(--ink-3);margin-top:2px}
+.who{font-family:var(--mono);font-size:11px;color:var(--ink-2);background:var(--surface-2);border-radius:4px;padding:2px 6px;white-space:nowrap}
+
+/* table */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:13px}
+th{position:sticky;top:0;background:var(--surface-2);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:600;padding:9px 10px;cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--line)}
+th:hover{color:var(--ink)}
+th .arr{font-size:9px;margin-left:4px}
+td{padding:9px 10px;border-bottom:1px solid var(--grid);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--surface-2)}
+tr.od td:first-child{box-shadow:inset 3px 0 0 var(--crit)}
+td.mono{font-family:var(--mono);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.desc{min-width:280px}
+td.rem{color:var(--ink-2);font-size:12px;min-width:200px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.pill .sw{width:7px;height:7px;border-radius:50%}
+.p-done{background:var(--good-soft);color:var(--s-done)}
+.p-prog{background:var(--prog-soft);color:var(--s-prog)}
+.p-wait{background:var(--warn-soft);color:var(--s-wait)}
+.p-new,.p-unset{background:var(--surface-2);color:var(--ink-2)}
+.p-hold{background:var(--surface-2);color:var(--s-hold)}
+.tag{font-size:10px;font-weight:700;letter-spacing:.04em;border-radius:3px;padding:1px 5px;margin-left:6px;vertical-align:1px}
+.tag.pr{background:var(--accent-soft);color:var(--accent)}
+.tag.od{background:var(--crit-soft);color:var(--crit)}
+.due-od{color:var(--crit);font-weight:600}
+.type{font-size:11px;color:var(--ink-3)}
+.bu{font-weight:600}
+.src{font-size:10px;color:var(--ink-3);display:block}
+
+/* tooltip */
+#tip{position:fixed;pointer-events:none;z-index:10;background:var(--ink);color:var(--bg);font-size:12px;border-radius:6px;padding:7px 9px;max-width:260px;box-shadow:0 4px 14px rgba(0,0,0,.18);opacity:0;transition:opacity .08s}
+#tip b{display:block;margin-bottom:2px}
+#tip .r{display:flex;justify-content:space-between;gap:14px;font-variant-numeric:tabular-nums}
+
+/* multi-select status */
+.ms{position:relative}
+.msbtn{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;display:inline-flex;gap:10px;align-items:center;justify-content:space-between;min-width:160px;cursor:pointer}
+.msbtn.on{border-color:var(--accent);color:var(--accent);font-weight:600}
+.mspop{position:absolute;top:100%;left:0;margin-top:4px;z-index:15;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:6px;min-width:210px;display:flex;flex-direction:column}
+.f .msopt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;font-size:13px;cursor:pointer;text-transform:none;letter-spacing:0;color:var(--ink);font-weight:400}
+.msopt:hover{background:var(--surface-2)}
+.msopt input{margin:0;accent-color:var(--accent)}
+.msfoot{display:flex;gap:6px;justify-content:space-between;border-top:1px solid var(--grid);margin-top:4px;padding:6px 4px 2px}
+#stLegend [data-st]{cursor:pointer;border-radius:4px;padding:1px 4px;margin:-1px -4px}
+#stLegend [data-st]:hover{color:var(--ink)}
+#stLegend [data-st][aria-pressed="true"]{background:var(--accent-soft);color:var(--ink);font-weight:600}
+#stLegend:has([aria-pressed="true"]) [data-st][aria-pressed="false"]{opacity:.5}
+
+/* live / editing */
+.hdr-r{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
+.btn.danger{color:var(--crit)}
+.btn.danger:hover{background:var(--crit-soft)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.mode{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.mode i{width:8px;height:8px;border-radius:50%;background:var(--s-new)}
+.mode.live i{background:var(--s-done)}
+.mode.off i{background:var(--s-wait)}
+tbody tr{cursor:pointer}
+td.act{white-space:nowrap;text-align:right}
+.rowact{font:inherit;font-size:11px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:5px;padding:3px 6px;cursor:pointer;max-width:none}
+.rowact:hover{border-color:var(--accent);color:var(--accent)}
+.rowdel{display:inline-flex;gap:4px;align-items:center;font-size:11px;color:var(--crit);font-weight:600}
+.mini.del{color:var(--crit);border-color:var(--crit)}
+.mini.del:hover{background:var(--crit-soft);color:var(--crit);border-color:var(--crit)}
+.mini{font:inherit;font-size:11px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:5px;padding:3px 7px;cursor:pointer}
+.mini:hover{color:var(--s-done);border-color:var(--s-done)}
+.upd{font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap}
+.upd.fresh{color:var(--accent);font-weight:600}
+.scrim{position:fixed;inset:0;background:rgba(10,14,20,.38);z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--surface);border-left:1px solid var(--line);z-index:21;display:flex;flex-direction:column;box-shadow:-8px 0 30px rgba(0,0,0,.15);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.drawer-h{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.drawer-b{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+.drawer-f{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.drawer-f .sp{flex:1}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:600}
+.fld input,.fld select,.fld textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+.fld textarea{resize:vertical;min-height:70px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.meta{font-size:12px;color:var(--ink-3)}
+.confirm{background:var(--crit-soft);color:var(--crit);border-radius:8px;padding:10px 12px;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.imp{background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.imp .btns{display:flex;gap:8px;flex-wrap:wrap}
+.mgr-list{display:flex;flex-direction:column}
+.mgr-it{border-top:1px solid var(--grid);padding:10px 0;display:flex;flex-direction:column;gap:8px}
+.mgr-it:first-child{border-top:0}
+.mgr-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mgr-name{font-weight:600}
+.mgr-cnt{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.mgr-ctl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.mgr-ctl input{font:inherit;font-size:12px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:4px 7px;flex:1;min-width:120px}
+.mgr-conf{background:var(--crit-soft);color:var(--crit);border-radius:6px;padding:8px 10px;font-size:12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.imgprev{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(980px,calc(100% - 32px));max-height:calc(100% - 48px);background:var(--surface);border:1px solid var(--line);border-radius:12px;z-index:22;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.imgprev-h{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.imgprev-m{margin:0;padding:12px 18px 0;font-size:13px;color:var(--ink-2)}
+.imgprev-b{overflow:auto;padding:12px 18px;flex:1}
+.imgprev-b img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;background:#fff}
+.imgprev-f{padding:12px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:13px;z-index:30;max-width:calc(100% - 32px)}
+
+
+/* quick follow-ups */
+.qf-form{display:grid;grid-template-columns:minmax(0,2.4fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,1fr) auto;gap:8px;align-items:end}
+.qf-form input{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%;min-width:0}
+.qf-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.chip{font:inherit;font-size:11px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:3px 10px;cursor:pointer}
+.chip:hover,.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.qf-list{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:4px 24px;max-height:420px;overflow-y:auto}
+.qf-grp{grid-column:1/-1;font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--ink-3);padding:10px 0 2px;border-bottom:1px solid var(--grid)}
+.qf-grp.od{color:var(--crit)}
+.qf-grp.td{color:var(--s-wait)}
+.qf-it{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:start;padding:7px 0;border-bottom:1px solid var(--grid)}
+.qf-it input[type=checkbox]{margin:3px 0 0;width:16px;height:16px;accent-color:var(--s-done);cursor:pointer}
+.qf-t{font-size:13px;word-break:break-word;cursor:text}
+.qf-it.done .qf-t{text-decoration:line-through;color:var(--ink-3)}
+.qf-m{font-size:11px;color:var(--ink-3);margin-top:2px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.qf-due{font-family:var(--mono);font-size:11px;border-radius:4px;padding:1px 6px;background:var(--surface-2);color:var(--ink-2)}
+.qf-due.od{background:var(--crit-soft);color:var(--crit);font-weight:600}
+.qf-due.td{background:var(--warn-soft);color:var(--s-wait);font-weight:600}
+.qf-a{display:flex;gap:4px;opacity:.55}
+.qf-it:hover .qf-a,.qf-it:focus-within .qf-a{opacity:1}
+.qf-a .mini.x:hover{color:var(--crit);border-color:var(--crit)}
+.qf-edit{font:inherit;font-size:13px;width:100%;border:1px solid var(--accent);border-radius:5px;padding:4px 6px;background:var(--surface);color:var(--ink)}
+@media (max-width:760px){.qf-form{grid-template-columns:1fr 1fr}.qf-form .qf-txt{grid-column:1/-1}.qf-list{grid-template-columns:1fr}.qf-a{opacity:1}}
+
+
+/* tabs */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{font:inherit;font-size:14px;font-weight:600;color:var(--ink-2);background:none;border:0;border-bottom:2px solid transparent;padding:9px 14px;margin-bottom:-1px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tab .n{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface-2);color:var(--ink-3);border-radius:999px;padding:1px 7px}
+.pane{display:flex;flex-direction:column;gap:20px}
+
+/* owner breakdown */
+table.owt{min-width:1080px}
+table.owt td,table.owt th{padding:8px 10px}
+table.owt th.num,table.owt td.num{text-align:right}
+table.owt td.num{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums}
+table.owt td.zero{color:var(--line)}
+table.owt td.crit{color:var(--crit);font-weight:600}
+table.owt td.own{font-weight:700;white-space:nowrap}
+table.owt td.mix{min-width:150px;vertical-align:middle}
+table.owt .track{height:12px}
+table.owt tbody tr.sel td{background:var(--accent-soft)}
+table.owt tbody tr.sel td.own{color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+table.owt tfoot td{border-top:1px solid var(--line);border-bottom:0;background:var(--surface-2);font-weight:700}
+table.owt tfoot td.num{font-weight:700}
+.pct{display:inline-block;width:42px;height:6px;border-radius:3px;background:var(--surface-2);vertical-align:middle;margin-right:6px;overflow:hidden}
+.pct i{display:block;height:100%;background:var(--s-done)}
+.ow-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.ow-head h2{font-size:18px}
+.ow-nav{display:flex;gap:6px;flex-wrap:wrap}
+.owk{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.owk div{background:var(--surface-2);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:1px}
+.owk b{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.owk span{font-size:11px;color:var(--ink-3)}
+.owk .crit b{color:var(--crit)}
+.ow2{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr);gap:24px;align-items:start}
+.ow2 h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700;margin:0 0 8px}
+.hrow.static{cursor:default}
+.owg{font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--ink-3);padding:12px 0 4px;border-bottom:1px solid var(--grid)}
+.owg:first-child{padding-top:0}
+.owg.od{color:var(--crit)}
+.owi{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;align-items:start;padding:9px 4px;border-bottom:1px solid var(--grid);cursor:pointer;border-radius:4px}
+.owi:hover{background:var(--surface-2)}
+.owi.ro{cursor:default}
+.owi .att-m{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.dl{font-family:var(--mono);font-size:11px;font-weight:600;border-radius:4px;padding:3px 6px;text-align:center;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.dl.od{background:var(--crit-soft);color:var(--crit)}
+.dl.soon{background:var(--warn-soft);color:var(--s-wait)}
+.dl.nd{color:var(--ink-3);font-weight:400}
+.dl.done{background:var(--good-soft);color:var(--s-done)}
+.ow-done summary{cursor:pointer;font-size:12px;color:var(--accent);padding:12px 0 4px;font-weight:600}
+
+.owsec{border-top:1px solid var(--line)}
+.owsec:first-of-type{border-top:0}
+.owsec>summary{list-style:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;padding:12px 4px;cursor:pointer;border-radius:6px}
+.owsec>summary::-webkit-details-marker{display:none}
+.owsec>summary:hover{background:var(--surface-2)}
+.owsec>summary::before{content:"▸";color:var(--ink-3);font-size:11px;width:10px;display:inline-block;transition:transform .1s}
+.owsec[open]>summary::before{transform:rotate(90deg)}
+.ow-n{font-size:15px;font-weight:700}
+.ow-c{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.ow-c b{font-weight:600}
+.ow-c .crit{color:var(--crit)}
+.ow-bu{font-size:11px;color:var(--ink-3);margin-left:auto}
+.owsec.sel>summary .ow-n{color:var(--accent)}
+.owsec.sel>summary{box-shadow:inset 3px 0 0 var(--accent)}
+.owsec-b{padding:0 0 10px 18px}
+.ow-tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+@media (prefers-reduced-motion:reduce){.owsec>summary::before{transition:none}}
+
+.owmail{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 4px;padding:10px 12px;background:var(--surface-2);border-radius:8px}
+.owmail label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:600}
+.owmail input{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 9px;flex:1 1 220px;min-width:0;max-width:340px}
+.owmail input:invalid{border-color:var(--crit)}
+.owmail a.btn{text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.owmail .note{flex-basis:100%}
+.owmail .withimg{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-2);text-transform:none;letter-spacing:0;font-weight:400;cursor:pointer}
+.owmail .withimg input{flex:none;width:auto;margin:0;accent-color:var(--accent)}
+.owmail .owstep{flex-basis:100%;font-size:13px;font-weight:600;color:var(--s-done);background:var(--good-soft);border-radius:6px;padding:8px 10px}
+.owmail .saved{font-size:11px;color:var(--s-done)}
+.owmail a.btn.teams{background:#5b5fc7;border-color:#5b5fc7;color:#fff}.owmail a.btn.teams:hover{filter:brightness(1.1)}
+@media (max-width:1020px){.owk{grid-template-columns:repeat(3,minmax(0,1fr))}.ow2{grid-template-columns:1fr}}
+@media (max-width:640px){.owk{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+@media (max-width:1020px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.grid3{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+@media (max-width:640px){.wrap{padding-inline:16px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid3{grid-template-columns:1fr}input[type=search]{width:100%}.f.grow{flex:1 1 100%}.asof{text-align:left}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">IT Applications &amp; Infrastructure · JKG BUs</div>
+      <h1>IT Follow-up Tracker</h1>
+      <div class="sub">Pending tasks and projects by business unit, owner and target date. Offline copy of the live tracker, exported 21 Oct 2026.</div>
+    </div>
+    <div class="hdr-r">
+      <div class="actions">
+        <button class="btn primary" id="addBtn" type="button">+ Add item</button>
+        <button class="btn" id="impBtn" type="button">Import Excel</button>
+        <button class="btn" id="expBtn" type="button">Export Excel</button>
+        <input type="file" id="impFile" accept=".xlsx,.xls,.xlsm" hidden>
+      </div>
+      <span class="mode" id="mode"><i></i><span>Connecting…</span></span>
+      <div class="asof" id="asof"></div>
+    </div>
+  </header>
+  <div class="imp" id="impBox" hidden></div>
+
+  <div class="tabs" role="tablist" aria-label="Tracker views">
+    <button class="tab" role="tab" type="button" id="tab-ov" aria-controls="paneOv" aria-selected="true">Overview</button>
+    <button class="tab" role="tab" type="button" id="tab-ow" aria-controls="paneOw" aria-selected="false" tabindex="-1">By owner <span class="n" id="tabOwN"></span></button>
+  </div>
+
+
+  <div class="filters" role="group" aria-label="Filters">
+    <div class="f"><label for="fView">View</label>
+      <div class="seg" id="fView">
+        <button type="button" data-v="open" aria-pressed="true">Open items</button>
+        <button type="button" data-v="all" aria-pressed="false">All items</button>
+      </div>
+    </div>
+    <div class="f"><label for="fBU">Business unit</label><select id="fBU"></select></div>
+    <div class="f"><label for="fOwner">Owner</label><select id="fOwner"></select></div>
+    <div class="f ms"><label id="fStatusL" for="fStatus">Status</label><button type="button" class="msbtn" id="fStatus" aria-haspopup="true" aria-expanded="false"><span id="fStatusTxt">All statuses</span><span aria-hidden="true">▾</span></button>
+      <div class="mspop" id="fStatusPop" role="group" aria-labelledby="fStatusL" hidden></div></div>
+    <div class="f"><label for="fType">Type</label><select id="fType"><option value="">All types</option><option>Task</option><option>Project</option></select></div>
+    <div class="f grow"><label for="fQ">Search</label><input type="search" id="fQ" placeholder="Description or remarks"></div>
+    <button class="btn" id="reset" type="button">Reset</button>
+  </div>
+
+  <div class="pane" id="paneOv" role="tabpanel" aria-labelledby="tab-ov">
+  <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+  <section class="panel" id="qfPanel" aria-labelledby="qfH">
+    <div class="panel-head"><h2 id="qfH">Quick follow-ups <span class="note" id="qfCount"></span></h2>
+      <span class="note"><button type="button" class="chip" id="qfDoneT" aria-pressed="false">Show done</button></span></div>
+    <form class="qf-form" id="qfForm" autocomplete="off">
+      <div class="f qf-txt"><label for="qfText">Follow up on</label><input id="qfText" placeholder="e.g. Call SLT on Seeduwa BIL order — press Enter to add" required></div>
+      <div class="f"><label for="qfWho">With / owner</label><input id="qfWho" list="dl_o" placeholder="Name"></div>
+      <div class="f"><label for="qfBU">BU</label><input id="qfBU" list="dl_bu" placeholder="BU"></div>
+      <div class="f"><label for="qfDue">Follow up by</label><input id="qfDue" type="date"></div>
+      <button class="btn primary" type="submit" id="qfAdd">Add</button>
+    </form>
+    <div class="qf-chips" id="qfChips"><span class="note">Due:</span>
+      <button type="button" class="chip" data-q="0">Today</button><button type="button" class="chip" data-q="1">Tomorrow</button>
+      <button type="button" class="chip" data-q="fri">Friday</button><button type="button" class="chip" data-q="7">Next week</button><button type="button" class="chip" data-q="">No date</button>
+      <span class="note" style="margin-left:auto">Respects the BU and Owner filters · double-click text to edit</span></div>
+    <div class="qf-list" id="qfList"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <div class="panel-head"><h2>Items by business unit</h2><span class="note">Click a bar to filter</span></div>
+      <div class="legend" id="stLegend"></div>
+      <div id="buChart"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Overdue — needs follow-up</h2><span class="note" id="attNote"></span></div>
+      <div class="att" id="att"></div>
+    </section>
+  </div>
+
+  <div class="grid3">
+    <section class="panel">
+      <div class="panel-head"><h2>Owner workload</h2><span class="note">Open items</span></div>
+      <div class="legend"><span><i class="sw" style="background:var(--crit)"></i>Overdue</span><span><i class="sw" style="background:var(--accent)"></i>Open, on time or no date</span></div>
+      <div id="ownChart"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Target dates by month</h2><span class="note">Open items</span></div>
+      <div class="legend"><span><i class="sw" style="background:var(--crit)"></i>Past due</span><span><i class="sw" style="background:var(--s-prog)"></i>Upcoming</span></div>
+      <div id="tlChart"></div>
+      <div class="note" id="tlNote" style="margin-top:10px"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Blocked on others</h2><span class="note">Open items with a waiting remark</span></div>
+      <div class="att" id="blocked"></div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head"><h2>All matching items <span class="note" id="rowCount"></span></h2><span class="note"><span id="editHint">Click a row to edit · Actions menu to delete · </span>Red edge = overdue · P = priority</span></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th data-k="bu">BU</th><th data-k="d">Description</th><th data-k="t">Type</th><th data-k="o">Owner</th>
+        <th data-k="due">Target date</th><th data-k="st">Status</th><th data-k="r">Remarks</th><th data-k="u">Updated</th><th></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+  </section>
+  </div>
+
+  <div class="pane" id="paneOw" role="tabpanel" aria-labelledby="tab-ow" hidden>
+    <section class="panel">
+      <div class="panel-head"><h2>Owner breakdown <span class="note" id="owCount"></span></h2><span class="note">Click an owner for details · click a column to sort · uses the BU, Status, Type and Search filters</span></div>
+      <div class="legend" id="owLegend"></div>
+      <div class="tbl-wrap"><table class="owt">
+        <thead><tr>
+          <th data-ok="o">Owner</th><th data-ok="mix">Mix (all items)</th><th class="num" data-ok="open">Open</th><th class="num" data-ok="od">Overdue</th>
+          <th class="num" data-ok="prog">In progress</th><th class="num" data-ok="wait">Pending vendor</th><th class="num" data-ok="new">Not started</th><th class="num" data-ok="hold">On hold</th><th class="num" data-ok="unset">No status</th>
+          <th class="num" data-ok="done">Completed</th><th class="num" data-ok="n">Total</th><th data-ok="pct">Done %</th><th class="num" data-ok="maxOd">Oldest overdue</th><th data-ok="next">Next due</th>
+        </tr></thead>
+        <tbody id="owBody"></tbody><tfoot id="owFoot"></tfoot>
+      </table></div>
+      <div class="note" id="owNote" style="margin-top:8px"></div>
+    </section>
+    <section class="panel" id="owDetail"></section>
+  </div>
+</div>
+<div id="tip" role="tooltip"></div>
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle" hidden>
+  <div class="drawer-h"><h2 id="dTitle">Edit item</h2><button class="btn" type="button" id="dClose" aria-label="Close">✕</button></div>
+  <form class="drawer-b" id="dForm" autocomplete="off">
+    <div class="row2">
+      <div class="fld"><label for="e_bu">Business unit</label><input id="e_bu" list="dl_bu" required></div>
+      <div class="fld"><label for="e_t">Type</label><select id="e_t"><option value="">—</option><option>Task</option><option>Project</option></select></div>
+    </div>
+    <div class="fld"><label for="e_d">Description</label><textarea id="e_d" rows="3" required></textarea></div>
+    <div class="row2">
+      <div class="fld"><label for="e_o">Owner (Res. person)</label><input id="e_o" list="dl_o"></div>
+      <div class="fld"><label for="e_p">Priority</label><select id="e_p"><option value="">—</option><option value="1">P1</option><option value="2">P2</option><option value="3">P3</option></select></div>
+    </div>
+    <div class="row2">
+      <div class="fld"><label for="e_due">Target date</label><input id="e_due" type="date"></div>
+      <div class="fld"><label for="e_s">Status</label><select id="e_s">
+        <option value="">No status</option><option>Not started</option><option>In progress</option><option>Pending</option><option>Pen. vendor</option><option>Hold</option><option>Completed</option><option>Closed</option>
+      </select></div>
+    </div>
+    <div class="fld"><label for="e_r">Remarks</label><textarea id="e_r" rows="4"></textarea></div>
+    <div class="meta" id="e_meta"></div>
+    <div class="confirm" id="delConfirm" hidden>Delete this item permanently?
+      <button class="btn danger" type="button" id="delYes">Delete</button><button class="btn" type="button" id="delNo">Keep</button></div>
+  </form>
+  <div class="drawer-f">
+    <button class="btn danger" type="button" id="dDel">Delete</button>
+    <span class="sp"></span>
+    <button class="btn" type="button" id="dCancel">Cancel</button>
+    <button class="btn primary" type="submit" form="dForm" id="dSave">Save</button>
+  </div>
+</aside>
+<aside class="drawer" id="mgr" role="dialog" aria-modal="true" aria-labelledby="mgrTitle" hidden>
+  <div class="drawer-h"><h2 id="mgrTitle">Manage list</h2><button class="btn" type="button" id="mgrClose" aria-label="Close">✕</button></div>
+  <div class="drawer-b"><div class="note" id="mgrNote"></div><div class="mgr-list" id="mgrList"></div></div>
+</aside>
+<div class="imgprev" id="imgPrev" role="dialog" aria-modal="true" aria-labelledby="imgPrevH" hidden>
+  <div class="imgprev-h"><h2 id="imgPrevH">Copy the picture</h2><button class="btn" type="button" id="imgPrevClose" aria-label="Close">✕</button></div>
+  <p class="imgprev-m" id="imgPrevMsg"></p>
+  <div class="imgprev-b"><img id="imgPrevImg" alt=""></div>
+  <div class="imgprev-f"><button class="btn" type="button" id="imgPrevSave">Save image</button><a class="btn primary" id="imgPrevOutlook" href="#" target="_blank" rel="noopener" style="text-decoration:none">Open Outlook ›</a></div>
+</div>
+<datalist id="dl_bu"></datalist><datalist id="dl_o"></datalist>
+<div class="imgprev" id="m365Dlg" role="dialog" aria-modal="true" aria-labelledby="m365H" hidden>
+  <div class="imgprev-h"><h2 id="m365H">Connect Microsoft 365</h2><button class="btn" type="button" id="m365Close" aria-label="Close">✕</button></div>
+  <div class="imgprev-b">
+    <p class="imgprev-m" style="padding:0 0 10px">One-time setup so that <b>Email in Outlook</b> and <b>Remind in Teams</b> can put the picture inside the draft or message by themselves (no Ctrl+V). The tracker talks to your own Microsoft 365 account, and nothing is sent to anyone else.</p>
+    <div class="note" id="m365Warn" style="color:var(--crit);margin-bottom:8px" hidden></div>
+    <ol style="margin:0 0 12px 18px;padding:0;font-size:13px;line-height:1.6;color:var(--ink-2)">
+      <li>Open <b>entra.microsoft.com → App registrations → New registration</b>. Name it “IT Follow-up Tracker”, choose <b>this organisation only</b>.</li>
+      <li>Under <b>Redirect URI</b> choose <b>Single-page application (SPA)</b> and enter <code id="m365Uri"></code></li>
+      <li>Open <b>API permissions → Add → Microsoft Graph → Delegated</b> and add: User.Read, Mail.ReadWrite, Chat.Create, Chat.ReadWrite, ChatMessage.Send. (Click “Grant admin consent” only if your tenant asks for it.)</li>
+      <li>Copy the <b>Application (client) ID</b> and <b>Directory (tenant) ID</b> from the Overview page into the boxes below.</li>
+    </ol>
+    <div class="row2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fld"><label for="m365Client">Application (client) ID</label><input id="m365Client" type="text" autocomplete="off" placeholder="00000000-0000-0000-0000-000000000000" style="width:100%"></div>
+      <div class="fld"><label for="m365Tenant">Directory (tenant) ID</label><input id="m365Tenant" type="text" autocomplete="off" placeholder="or your domain, e.g. company.com" style="width:100%"></div>
+    </div>
+    <div class="note" id="m365Status" style="margin-top:10px"></div>
+  </div>
+  <div class="imgprev-f"><button class="btn" type="button" id="m365Out">Sign out</button><button class="btn" type="button" id="m365Save">Save</button><button class="btn primary" type="button" id="m365In">Save and sign in</button></div>
+</div>
+<div class="imgprev" id="tmDlg" role="dialog" aria-modal="true" aria-labelledby="tmH" hidden>
+  <div class="imgprev-h"><h2 id="tmH">Teams message preview</h2><button class="btn" type="button" id="tmClose" aria-label="Close">✕</button></div>
+  <p class="imgprev-m" id="tmTo"></p>
+  <div class="imgprev-b"><pre id="tmText" style="white-space:pre-wrap;font:inherit;font-size:13px;margin:0 0 10px;color:var(--ink)"></pre><img id="tmImg" alt="" style="display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;background:#fff"></div>
+  <div class="imgprev-f"><span class="note" id="tmMsg" style="flex:1;align-self:center"></span><button class="btn" type="button" id="tmCancel">Cancel</button><button class="btn primary" type="button" id="tmSend">Send to Teams now</button></div>
+</div>
+<div id="toast" role="status" hidden></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.39.0/lib/msal-browser.min.js"></script>
+
+<script>
+// Snapshot of Book_35.xlsx. Used only when shared live data is unavailable (e.g. the downloaded copy).
+const SNAPSHOT = [{"bu": "CWIT", "d": "CWIT Invoicing module", "due": null, "n": 1, "o": "Chelaka", "ord": 1, "p": null, "r": null, "s": "Hold", "sec": "Open tracker", "t": "Project", "u": "2026-09-24T05:47:56.194Z", "id": "i001"}, {"bu": "JKLL", "d": "Printserver procurement & testing", "due": "2026-04-02", "n": 2, "o": "DU", "ord": 2, "p": null, "r": null, "s": "Completed", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T02:31:51.434Z", "id": "i002"}, {"bu": "JKLL", "d": "\"JKLL - IT Assets\" - broken, obsolete, or non-functional IT hardware list", "due": "2026-10-08", "n": 3, "o": "Dananjaya", "ord": 3, "p": 2, "r": "Waiting for quotation", "s": "In progress", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T09:12:32.139Z", "id": "i003"}, {"bu": "JKLL", "d": "Seeduwa PNPL printer to the SAP Printer server", "due": null, "n": 4, "o": "DU", "ord": 4, "p": null, "r": null, "s": "Closed", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T02:39:45.136Z", "id": "i004"}, {"bu": "JKLL", "d": "Wi-Fi expiry (MR33) & next action for Seeduwa - SLT", "due": "2026-10-30", "n": 5, "o": "SLT", "ord": 5, "p": null, "r": "Waiting for SLT feedback", "s": "Not started", "sec": "Open tracker", "t": "Project", "u": "2026-09-24T09:48:14.478Z", "id": "i005"}, {"bu": "JKLL", "d": "Wi-Fi expiry (MR33) & next action for Endramulla - SLT", "due": "2026-09-30", "n": 6, "o": "SLT", "ord": 6, "p": null, "r": "Waiting for SLT feedback", "s": "Not started", "sec": "Open tracker", "t": "Project", "u": "2026-09-24T04:31:25.623Z", "id": "i006"}, {"bu": "JKLL", "d": "Wi-Fi expiry (MR33) & next action for MDC", "due": null, "n": 7, "o": "Shalitha", "ord": 7, "p": 1, "r": null, "s": "In progress", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T06:43:37.469Z", "id": "i007"}, {"bu": "JKLL", "d": "Wi-Fi expiry (MR33) & next action for Thudella replace with JKIT AP and enable ISE Auth", "due": "2026-04-20", "n": 8, "o": "SP", "ord": 8, "p": 1, "r": "Pleace the order with JKIT", "s": "Completed", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T09:11:24.945Z", "id": "i008"}, {"bu": "JKLL", "d": "\"Customer Complaint Portal - Phase 2\" - BU specific project rollout", "due": null, "n": 9, "o": "Sriram", "ord": 9, "p": null, "r": null, "s": null, "sec": "Open tracker", "t": "Project", "u": "2026-09-24T05:50:16.207Z", "id": "i009"}, {"bu": "JKLL", "d": "Infor payments (Re: Infor Invoice 20260612)", "due": null, "n": 10, "o": null, "ord": 10, "p": null, "r": null, "s": "Completed", "sec": "Open tracker", "t": null, "u": "2026-09-24T02:32:46.568Z", "id": "i010"}, {"bu": "JKLL", "d": "Infor Invoice format changes", "due": "2026-06-19", "n": 38, "o": "SR", "ord": 11, "p": null, "r": "Completed & waiting for UAT", "s": "Completed", "sec": "Open tracker", "t": "Task", "u": null, "id": "i011"}, {"bu": "LMS", "d": "Tax Changes SR to be raised by Finance team", "due": null, "n": 11, "o": null, "ord": 12, "p": null, "r": null, "s": "Completed", "sec": "Open tracker", "t": "Task", "u": "2026-10-21T02:46:17.392Z", "id": "i012"}, {"bu": "LMS", "d": "\"Fw: Toner Cartridge to LM Nilwala\" details from finance", "due": "2026-05-15", "n": 12, "o": "NR", "ord": 13, "p": null, "r": null, "s": "Completed", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T02:32:10.752Z", "id": "i013"}, {"bu": "LMS", "d": "SAP IT Assets serial number insertion (Fw: Physical Asset Verification - LANKA MARINE SERVICES (PVT) LIMITED)", "due": null, "n": 39, "o": "WP", "ord": 14, "p": null, "r": null, "s": "Completed", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T02:38:44.962Z", "id": "i014"}, {"bu": "LMS", "d": "LMS Asset Disposal (LMS IT assets Disposal - 8000099, 8000106, 8000112, 8000125, 8000134, 8000141, 8000142, 8000143)", "due": null, "n": null, "o": null, "ord": 15, "p": null, "r": "Requested to dispose on 12th June, Reminder sent to 25th Jun", "s": "Completed", "sec": "Open tracker", "t": null, "u": "2026-09-24T02:38:38.495Z", "id": "i015"}, {"bu": "MAL", "d": "MAL BI Dashboard discussion", "due": null, "n": 13, "o": null, "ord": 16, "p": null, "r": "Waiting for scope document", "s": "Closed", "sec": "Open tracker", "t": "Project", "u": "2026-10-21T02:46:03.801Z", "id": "i016"}, {"bu": "MAL", "d": "Vindiya HP latop damage repairs / Root cause", "due": null, "n": 14, "o": "Finance", "ord": 17, "p": null, "r": "PO Pending with Finance", "s": "Closed", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T02:35:48.804Z", "id": "i017"}, {"bu": "MAL", "d": "Cargo village Internet access", "due": null, "n": null, "o": "SLT", "ord": 18, "p": null, "r": null, "s": null, "sec": "Open tracker", "t": "Task", "u": null, "id": "i018"}, {"bu": "MTL", "d": "SAP Posting rule change", "due": "2026-04-15", "n": 15, "o": "CICDA", "ord": 19, "p": null, "r": null, "s": "Closed", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T02:37:16.020Z", "id": "i019"}, {"bu": "MTL", "d": "\"Re: Servicing Egencia clients - Required MI feed change\" Amex change", "due": "2026-05-11", "n": 16, "o": "CICDA", "ord": 20, "p": null, "r": null, "s": "Completed", "sec": "Open tracker", "t": "Task", "u": null, "id": "i020"}, {"bu": "MTL", "d": "Sliptrunk details - SLT", "due": "2026-04-20", "n": 17, "o": "SLT", "ord": 21, "p": null, "r": "2475100 - 2475500, 2439747 - 2439750, 2318600 - 2318699 SLT to confirm.", "s": "Completed", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T02:32:04.443Z", "id": "i021"}, {"bu": "MTL", "d": "VISA Process gaps & way forward", "due": null, "n": 18, "o": "Chelaka", "ord": 22, "p": null, "r": null, "s": null, "sec": "Open tracker", "t": "Task", "u": "2026-09-24T05:50:40.099Z", "id": "i022"}, {"bu": "MTL", "d": "Invoice TAX format change", "due": null, "n": 19, "o": "CICDA", "ord": 23, "p": null, "r": "Reg. 11-June-26, Until 19th June payment delays on hold. We have requested to start from 19th June. delivery date pending", "s": "Completed", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T04:35:23.808Z", "id": "i023"}, {"bu": "MTL", "d": "Laptop purchases Asset nos", "due": null, "n": 20, "o": "Dinushika", "ord": 24, "p": null, "r": "Asset numbers pending from Dinushika", "s": "Pending", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T05:50:54.271Z", "id": "i024"}, {"bu": "MTL", "d": "CICDA Payments 3rd Qtr (Re: Cicada Payment - jan2026 to march 2026)", "due": null, "n": 21, "o": null, "ord": 25, "p": null, "r": null, "s": "Completed", "sec": "Open tracker", "t": null, "u": "2026-09-24T04:35:35.828Z", "id": "i025"}, {"bu": "SAF", "d": "SAF BI Dashboard discussion", "due": null, "n": 22, "o": null, "ord": 26, "p": null, "r": null, "s": "Closed", "sec": "Open tracker", "t": "Project", "u": "2026-10-21T02:46:04.252Z", "id": "i026"}, {"bu": "SAF", "d": "RAR Rollout for SAF", "due": null, "n": 23, "o": "Rajkumar", "ord": 27, "p": null, "r": "KPMG is going from July 27", "s": null, "sec": "Open tracker", "t": "Project", "u": "2026-09-24T05:51:07.286Z", "id": "i027"}, {"bu": "SAF", "d": "Booking date based report from Accelero", "due": null, "n": 24, "o": "NR", "ord": 28, "p": null, "r": null, "s": "Done", "sec": "Open tracker", "t": "Task", "u": null, "id": "i028"}, {"bu": "SAF", "d": "Operational sheet enhancement", "due": "2026-10-06", "n": 25, "o": "Rajkumar", "ord": 29, "p": null, "r": "Development end 06-Oct-26\nGo Live -6-Nov-26", "s": "In progress", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T09:44:44.614Z", "id": "i029"}, {"bu": "SAF", "d": "Wi-Fi expiry (MR33) & next action for Terminal & Hanger", "due": "2026-04-20", "n": 26, "o": "SP", "ord": 30, "p": null, "r": "Pleace the order with JKIT", "s": "Completed", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T08:23:56.196Z", "id": "i030"}, {"bu": "SAF", "d": "AMS Migration", "due": "2026-04-09", "n": 27, "o": "SP", "ord": 31, "p": 1, "r": "Sarindu to confirm with AASL & AirMastro team also have to comeback", "s": "Completed", "sec": "Open tracker", "t": "Project", "u": "2026-09-24T02:31:56.878Z", "id": "i031"}, {"bu": "SSC", "d": "Wi-FI Solution for Mobitel for Infomate", "due": "2026-10-15", "n": 28, "o": "Rajkumar", "ord": 32, "p": null, "r": "Waiting for proposal", "s": "Pending", "sec": "Open tracker", "t": "Project", "u": "2026-09-24T09:44:52.924Z", "id": "i032"}, {"bu": "TRP", "d": "SmartOffice OTR rollout", "due": "2026-10-30", "n": 29, "o": "Rajkumar", "ord": 33, "p": null, "r": "Speak to Shanith", "s": null, "sec": "Open tracker", "t": "Project", "u": "2026-09-24T09:45:13.674Z", "id": "i033"}, {"bu": "TRP", "d": "Awareness session", "due": "2026-05-15", "n": 30, "o": "DU", "ord": 34, "p": null, "r": null, "s": "Completed", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T02:32:30.784Z", "id": "i034"}, {"bu": "TRP", "d": "Automate the Approval process like capex, agreements, Disposal & etc.", "due": "2026-11-18", "n": 31, "o": "Rajkumar", "ord": 35, "p": null, "r": null, "s": "Not started", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T09:47:55.961Z", "id": "i035"}, {"bu": "TRP", "d": "Sector level SAP BI Dashboard", "due": "2026-09-30", "n": 32, "o": "Rajkumar", "ord": 36, "p": null, "r": "Neomal agreed to deliver on or before 30sep 26", "s": "In progress", "sec": "Open tracker", "t": "Project", "u": "2026-09-24T05:48:24.344Z", "id": "i036"}, {"bu": "TRP", "d": "Performance objective finialisation 26/27", "due": null, "n": 33, "o": "NR", "ord": 37, "p": null, "r": null, "s": null, "sec": "Open tracker", "t": "Task", "u": null, "id": "i037"}, {"bu": "TRP", "d": "PIM Rollout for TRP Sector", "due": "2026-10-31", "n": 34, "o": "Rajkumar", "ord": 38, "p": null, "r": null, "s": null, "sec": "Open tracker", "t": "Project", "u": "2026-09-24T09:45:01.517Z", "id": "i038"}, {"bu": "TRP", "d": "Maersk, CWIT & SAGT SAP TB upload then only Coperate finance see the consolidated view", "due": null, "n": 35, "o": "Rajkumar", "ord": 39, "p": null, "r": "Pending with Shanith", "s": "In progress", "sec": "Open tracker", "t": "Project", "u": "2026-09-24T05:54:55.552Z", "id": "i039"}, {"bu": "TRP", "d": "SmartOffice - Petty cash payments directly to users", "due": null, "n": 36, "o": "Shanith", "ord": 40, "p": null, "r": "Shanith have to get back", "s": null, "sec": "Open tracker", "t": "Task", "u": null, "id": "i040"}, {"bu": "TRP", "d": "LAPS Rollout for TRP, JKW, JKL & Infomate", "due": null, "n": 37, "o": "Shalitha", "ord": 41, "p": null, "r": null, "s": "Completed", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T06:09:07.110Z", "id": "i041"}, {"bu": "TRP", "d": "SLT Line disconnection 0112252466, 0112327252, 0112440738", "due": null, "n": null, "o": "SW", "ord": 42, "p": null, "r": "Approval given, Sonali to issue a letter", "s": "Completed", "sec": "Open tracker", "t": "Task", "u": null, "id": "i042"}, {"bu": "MTL", "d": "117847399 - Dialog 4G disconnection (RE: Dialog 4G disconnection - Nilantha)", "due": null, "n": null, "o": "SP", "ord": 43, "p": null, "r": "Disconnection request given", "s": "Completed", "sec": "Open tracker", "t": "Task", "u": null, "id": "i043"}, {"bu": "IMMS", "d": "IMMS IT Assset verification", "due": null, "n": null, "o": "SP", "ord": 44, "p": null, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i044"}, {"bu": "JKPLC", "d": "TBBoss to SAP Interface", "due": null, "n": null, "o": "NR", "ord": 45, "p": null, "r": "check with Charith", "s": "Closed", "sec": "Completed log", "t": "Task", "u": "2026-10-21T02:44:56.425Z", "id": "i045"}, {"bu": "JKPLC", "d": "PaloAlto client from central tenant - Raj to followup", "due": null, "n": 29, "o": "NR", "ord": 46, "p": null, "r": null, "s": "Closed", "sec": "Completed log", "t": "Task", "u": "2026-10-21T02:45:04.201Z", "id": "i046"}, {"bu": "JKLL", "d": "Thudela BLL connection activation", "due": "2026-04-09", "n": 7, "o": "DU", "ord": 47, "p": null, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i047"}, {"bu": "JKLL", "d": "3 Monitors delivery (Lasitha * 2 for IT)", "due": null, "n": null, "o": "DU", "ord": 48, "p": null, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i048"}, {"bu": "JKLL", "d": "Thudela ADSL connection disconnection notice", "due": "2026-04-12", "n": 4, "o": "DU", "ord": 49, "p": null, "r": "Requested from SLT & confirmation pending", "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i049"}, {"bu": "JKLL", "d": "Seeduwa DC Network rack neatup", "due": "2026-04-09", "n": 4, "o": "DU", "ord": 50, "p": 3, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": "2026-09-24T08:25:04.442Z", "id": "i050"}, {"bu": "JKLL", "d": "MDC TEA RDT delivery", "due": "2026-04-15", "n": 8, "o": "DU", "ord": 51, "p": 1, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i051"}, {"bu": "JKLL", "d": "Yasiru's account disablement", "due": null, "n": 27, "o": "SP", "ord": 52, "p": null, "r": null, "s": "Closed", "sec": "Completed log", "t": "Task", "u": null, "id": "i052"}, {"bu": "JKLL", "d": "Hirdaramani RDT Implementation & Rental laptop discontinuation", "due": "2026-05-20", "n": 7, "o": "DU", "ord": 53, "p": null, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i053"}, {"bu": "JKLL", "d": "MDC TEA RDT charging cradle delivery", "due": "2026-04-15", "n": 8, "o": "DU", "ord": 54, "p": 1, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i054"}, {"bu": "JKLL", "d": "Hirdaramani RDT chargers", "due": "2026-04-15", "n": 9, "o": "DU", "ord": 55, "p": null, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i055"}, {"bu": "JKLL", "d": "Enable Static IP for MDC TEA 2 - RDT devices (restrict the access for CheckApp)", "due": null, "n": 31, "o": "DU", "ord": 56, "p": null, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i056"}, {"bu": "MAL", "d": "Asantha's printer", "due": null, "n": null, "o": null, "ord": 57, "p": null, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i057"}, {"bu": "MTL", "d": "Tempory laptop arrangement for MTL 2 Nos", "due": "2026-04-20", "n": null, "o": "DP", "ord": 58, "p": null, "r": null, "s": "Closed", "sec": "Completed log", "t": "Task", "u": null, "id": "i058"}, {"bu": "MTL", "d": "Credit approval dashboard for MTL", "due": "2026-05-04", "n": 7, "o": "CICDA", "ord": 59, "p": null, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i059"}, {"bu": "MTL", "d": "Invoice portal roll out - MTL", "due": null, "n": 14, "o": "Harshana", "ord": 60, "p": null, "r": "Waiting for timeline", "s": "Completed", "sec": "Completed log", "t": "Project", "u": "2026-09-24T02:40:57.486Z", "id": "i060"}, {"bu": "SAF", "d": "Accelero Payment gateway intgration", "due": "2026-04-30", "n": null, "o": "SP", "ord": 61, "p": 1, "r": null, "s": "Completed", "sec": "Completed log", "t": "Project", "u": null, "id": "i061"}, {"bu": "SAF", "d": "Audit concern SAF on the password policy", "due": null, "n": 28, "o": "SP", "ord": 62, "p": 1, "r": "Waiting response from ISA", "s": "Closed", "sec": "Completed log", "t": "Task", "u": "2026-09-24T02:35:13.061Z", "id": "i062"}, {"bu": "SAF", "d": "CINNAMONAIR.COM Domain renewal", "due": null, "n": null, "o": "SP", "ord": 63, "p": null, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i063"}, {"bu": "TRP", "d": "ADM Account Profile 6 allocation from IDM", "due": "2026-03-30", "n": 18, "o": "NR", "ord": 64, "p": 1, "r": null, "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i064"}, {"bu": "TRP", "d": "TRP - Policy Exception Requirements update", "due": "2026-04-20", "n": null, "o": "SP, NR", "ord": 65, "p": null, "r": null, "s": "Closed", "sec": "Completed log", "t": "Task", "u": null, "id": "i065"}, {"bu": "TRP", "d": "Transportation & Common Dashboards Access – SAP Analytics Cloud Review", "due": "2026-04-15", "n": 16, "o": "NR,WP", "ord": 66, "p": null, "r": "Time requested to discuss", "s": "Completed", "sec": "Completed log", "t": "Task", "u": null, "id": "i066"}, {"bu": "JKLL", "d": "MDC TEA Migrate users for Wi-Fi to Dongle base connection & disconnect", "due": null, "n": null, "o": "Jathurshan", "ord": 67, "p": null, "r": null, "s": "In progress", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T05:55:12.966Z", "id": "nmuey0mnt7rau"}, {"bu": "MMC", "d": "MMS Port operations internet service provider shift from Lanakacom to SLT Starlink\nNote: If the Lankacom signal issue not improved.", "due": "2026-09-30", "n": null, "o": "Jathurshan", "ord": 68, "p": null, "r": null, "s": "In progress", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T05:48:55.389Z", "id": "nmuf0snx6bfr5"}, {"bu": "JKLL", "d": "RDT transfer from Seeduwa to EDC", "due": "2026-09-30", "n": null, "o": "Thisari", "ord": 69, "p": 1, "r": null, "s": "In progress", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T04:34:20.768Z", "id": "nmuf1drzwc4e0"}, {"bu": "SAF", "d": "Hanger & Terminal Wi-Fi Authentication via SSO", "due": "2026-10-09", "n": null, "o": "Shalitha", "ord": 70, "p": 2, "r": null, "s": null, "sec": "Open tracker", "t": "Task", "u": "2026-09-24T08:24:46.354Z", "id": "nmuf9mi7zw0vc"}, {"bu": "LMS", "d": "LMS TV Installation", "due": "2026-09-29", "n": null, "o": "Amuth", "ord": 71, "p": null, "r": null, "s": "In progress", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T09:01:46.309Z", "id": "nmufayf58luzu"}, {"bu": "JKLL", "d": "Transport team movement to new location & Infrastructure setup", "due": "2026-09-30", "n": null, "o": "Jathurshan", "ord": 72, "p": 2, "r": null, "s": "Not started", "sec": "Open tracker", "t": "Task", "u": "2026-09-24T09:02:46.011Z", "id": "nmufaz53vupvu"}, {"bu": "JKLL", "d": "Place orders with SLT for internet BIL connection", "due": "2026-09-30", "n": null, "o": "Jathurshan", "ord": 73, "p": 1, "r": null, "s": null, "sec": "Open tracker", "t": "Task", "u": "2026-09-24T09:03:27.143Z", "id": "nmufb0glzt1ho"}, {"bu": "JKLL", "d": "Transport team Wi-FI access point installation", "due": "2026-09-30", "n": null, "o": "Jathurshan", "ord": 74, "p": 2, "r": null, "s": null, "sec": "Open tracker", "t": "Task", "u": "2026-09-24T09:03:59.064Z", "id": "nmufb1audn5y2"}, {"bu": "SSC", "d": "ILL Link & Data network for Kurunegala -", "due": "2026-09-25", "n": null, "o": "JIT", "ord": 75, "p": null, "r": null, "s": null, "sec": "Open tracker", "t": null, "u": "2026-09-24T09:39:04.133Z", "id": "nmufc9vhpnh8s"}, {"bu": "SSC", "d": "Kurunegala - Network diagram & What is the DR options \nEx. If the ILL / Switch / Wi-FI Meraki fails, what is the alternate arrangements", "due": "2026-09-30", "n": null, "o": "JIT", "ord": 76, "p": 2, "r": null, "s": null, "sec": "Open tracker", "t": null, "u": "2026-09-24T09:43:01.070Z", "id": "nmufcdh7raj8b"}, {"bu": "SAF", "d": "VAPT SAF Website & booking engine", "due": "2026-10-10", "n": null, "o": "Shalitha", "ord": 77, "p": 1, "r": null, "s": "Not started", "sec": "Open tracker", "t": "Task", "u": "2026-09-25T03:41:17.473Z", "id": "nmugey333zdv2"}, {"bu": "JKPLC", "d": "VAPT for JKPLC sites", "due": "2026-09-30", "n": null, "o": "Charith", "ord": 78, "p": 3, "r": null, "s": null, "sec": "Open tracker", "t": "Task", "u": "2026-09-25T04:30:03.219Z", "id": "nmuggoq42real"}];
+let TODAY = new Date(); TODAY.setHours(0,0,0,0);
+const SNAP_AT = "21 Oct 2026";
+const LS_KEY="itFollowupTracker.2026-10-21";
+const READONLY = false;
+const LIVE_ROWS = [];
+const STATUS = {
+  done:{label:"Completed / closed",cls:"p-done",v:"--s-done"},
+  prog:{label:"In progress",cls:"p-prog",v:"--s-prog"},
+  wait:{label:"Pending vendor",cls:"p-wait",v:"--s-wait"},
+  new:{label:"Not started",cls:"p-new",v:"--s-new"},
+  hold:{label:"On hold",cls:"p-hold",v:"--s-hold"},
+  unset:{label:"No status",cls:"p-unset",v:"--s-unset"}
+};
+const ORDER=["done","prog","wait","new","hold","unset"];
+function norm(s){ if(!s) return "unset"; s=s.toLowerCase();
+  if(/\bnot\s+(yet\s+)?(complet|done|clos)/.test(s)) return "new";
+  if(/complet|closed|\bdone\b|cancel/.test(s)) return "done";
+  if(/progress/.test(s)) return "prog";
+  if(/vendor/.test(s)) return "wait";
+  if(/hold/.test(s)) return "hold";
+  if(/not started|pending/.test(s)) return "new"; return "unset"; }
+let ITEMS=[];   // raw rows: {id,ord,bu,d,p,t,o,due,s,r,sec,n,u}
+let DATA=[];    // enriched rows for rendering
+function enrich(){
+  DATA = ITEMS.slice().sort((a,b)=>(a.ord??0)-(b.ord??0)||String(a.id).localeCompare(b.id)).map((x,i)=>{
+    const st=norm(x.s); const due=x.due?new Date(x.due+"T00:00:00"):null;
+    const open=st!=="done";
+    const od=!!(open&&due&&due<TODAY); const days=od?Math.round((TODAY-due)/864e5):0;
+    const waiting=!!(open&&x.r&&/wait|pending|to confirm|have to|get back|speak to|reminder/i.test(x.r));
+    return {...x,idx:i,st,open,dueD:due,od,days,waiting,o:x.o||"Unassigned",t:x.t||"—",bu:(x.bu||"").trim()||"—"};
+  });
+}
+const seedItems=()=>SNAPSHOT.map((x,i)=>({id:"i"+String(i+1).padStart(3,"0"),ord:i+1,...x}));
+
+/* ---------- storage: shared live data (db) or this browser (offline copy) ---------- */
+let db=null, MODE="connecting", canWrite=true;
+function setMode(m){MODE=m;const el=$("mode");el.className="mode "+(m==="live"?"live":m==="offline"?"off":"");
+  el.lastElementChild.textContent=m==="snapshot"?"Read-only snapshot · "+SNAP_AT:m==="live"?"Live · shared with everyone who opens this page":m==="offline"?"Offline copy · starts from "+SNAP_AT+" data · changes saved in this browser":"Connecting…";}
+function lsLoad(){try{const s=localStorage.getItem(LS_KEY);return s?JSON.parse(s):null}catch(e){return null}}
+function lsSave(){try{localStorage.setItem(LS_KEY,JSON.stringify(ITEMS))}catch(e){}}
+const clean=o=>{const b={};for(const k of ["ord","bu","d","p","t","o","due","s","r","sec","n","u"])b[k]=o[k]??null;return b};
+async function writeItem(item){
+  item.u=new Date().toISOString();
+  if(MODE==="live"){await db.collection("items").doc(item.id).set(clean(item));}
+  else{const i=ITEMS.findIndex(x=>x.id===item.id);i>=0?ITEMS[i]=item:ITEMS.push(item);lsSave();reload();}
+}
+async function removeItem(id){
+  if(MODE==="live"){await db.collection("items").doc(id).delete();}
+  else{ITEMS=ITEMS.filter(x=>x.id!==id);lsSave();reload();}
+}
+async function replaceAll(rows){
+  if(MODE==="live"){
+    const col=db.collection("items");
+    const newIds=new Set(rows.map(r=>r.id));
+    const ops=[...ITEMS.filter(x=>!newIds.has(x.id)).map(x=>()=>col.doc(x.id).delete()),...rows.map(r=>()=>col.doc(r.id).set(clean(r)))];
+    for(let i=0;i<ops.length;i+=10) await Promise.all(ops.slice(i,i+10).map(f=>f()));
+  } else {ITEMS=rows;lsSave();reload();}
+}
+function dbFail(e,what){
+  if(e&&e.code==="invalid_argument"){canWrite=false;applyWriteState();render();toast("You have view-only access, so "+what+" wasn't saved.");}
+  else if(e&&e.code==="quota_exceeded") toast("Storage is full. Delete some items and try again.");
+  else toast("Couldn't save "+what+". Check your connection and try again.");
+}
+function applyWriteState(){["addBtn","impBtn"].forEach(id=>$(id).disabled=!canWrite);}
+let toastT;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3800)}
+const $=id=>document.getElementById(id);
+const css=v=>`var(${v})`;
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=d=>d?d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"2-digit"}):"—";
+const state={view:"open",bu:"",owner:"",status:new Set(),type:"",q:"",kpi:"",sort:{k:"due",dir:1}};
+
+function refreshMeta(){
+  const last=ITEMS.reduce((m,x)=>x.u&&x.u>m?x.u:m,"");
+  $("asof").innerHTML=`As of ${TODAY.toLocaleDateString("en-GB",{weekday:"short",day:"2-digit",month:"short",year:"numeric"})} · ${DATA.length} items`+(last?`<br>Last change ${new Date(last).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}`:"");
+  const setOpts=(id,all,vals,cur)=>{$(id).innerHTML=`<option value="">${all}</option>`+vals.map(b=>`<option${b===cur?" selected":""}>${esc(b)}</option>`).join("")+(canWrite?`<option disabled>──────────</option><option value="__mgr">⚙ Manage list…</option>`:"");};
+  const bus=uniq(DATA.map(d=>d.bu)),own=uniq(DATA.flatMap(d=>ownersOf(d)));
+  setOpts("fBU","All BUs",bus,state.bu);setOpts("fOwner","All owners",own,state.owner);
+  $("dl_bu").innerHTML=bus.map(b=>`<option value="${esc(b)}">`).join("");
+  $("dl_o").innerHTML=own.filter(o=>o!=="Unassigned").map(b=>`<option value="${esc(b)}">`).join("");
+}
+const uniq=a=>[...new Set(a)].sort((a,b)=>a.localeCompare(b));
+$("fStatusPop").innerHTML=ORDER.map(k=>`<label class="msopt"><input type="checkbox" id="st_${k}" value="${k}"><i class="sw" style="background:${css(STATUS[k].v)}"></i>${STATUS[k].label}</label>`).join("")+`<div class="msfoot"><button type="button" class="mini" id="stOpen">Open only</button><button type="button" class="mini" id="stClear">Clear</button></div>`;
+function syncStatus(){
+  const s=state.status;
+  ORDER.forEach(k=>$("st_"+k).checked=s.has(k));
+  $("fStatusTxt").textContent=!s.size?"All statuses":s.size===1?STATUS[[...s][0]].label:`${s.size} statuses`;
+  $("fStatus").classList.toggle("on",s.size>0);
+  document.querySelectorAll("#stLegend [data-st]").forEach(el=>el.setAttribute("aria-pressed",s.has(el.dataset.st)));
+  if(s.has("done")&&state.view==="open")setView("all");
+}
+function toggleStatus(k,on){on??=!state.status.has(k);on?state.status.add(k):state.status.delete(k);syncStatus();render();}
+$("fStatusPop").addEventListener("change",e=>{if(e.target.type==="checkbox")toggleStatus(e.target.value,e.target.checked)});
+$("stClear").onclick=()=>{state.status.clear();syncStatus();render()};
+$("stOpen").onclick=()=>{state.status=new Set(ORDER.filter(k=>k!=="done"));syncStatus();render()};
+$("fStatus").onclick=e=>{e.stopPropagation();const pop=$("fStatusPop");pop.hidden=!pop.hidden;$("fStatus").setAttribute("aria-expanded",!pop.hidden)};
+document.addEventListener("click",e=>{if(!e.target.closest(".ms")){$("fStatusPop").hidden=true;$("fStatus").setAttribute("aria-expanded","false")}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("fStatusPop").hidden){$("fStatusPop").hidden=true;$("fStatus").focus()}});
+$("stLegend").innerHTML=ORDER.map(k=>`<span data-st="${k}" role="button" tabindex="0" aria-pressed="false" title="Filter by this status"><i class="sw" style="background:${css(STATUS[k].v)}"></i>${STATUS[k].label}</span>`).join("");
+
+function filtered(ignoreView){
+  const q=state.q.toLowerCase();
+  return DATA.filter(d=>
+    (ignoreView||state.view==="all"||d.open) &&
+    (!state.bu||d.bu===state.bu)&&(!state.owner||ownersOf(d).includes(state.owner))&&
+    (!state.status.size||state.status.has(d.st))&&(!state.type||d.t===state.type)&&
+    (!q||(d.d+" "+(d.r||"")).toLowerCase().includes(q)) &&
+    (!state.kpi||kpiTest[state.kpi](d)));
+}
+const kpiTest={open:d=>d.open,od:d=>d.od,nodate:d=>d.open&&!d.dueD,unset:d=>d.st==="unset",wait:d=>d.waiting,done:d=>!d.open};
+
+// tooltip
+const tip=$("tip");
+function showTip(e,html){tip.innerHTML=html;tip.style.opacity=1;moveTip(e)}
+function moveTip(e){const w=tip.offsetWidth,h=tip.offsetHeight;let x=e.clientX+14,y=e.clientY+14;if(x+w>innerWidth-8)x=e.clientX-w-14;if(y+h>innerHeight-8)y=e.clientY-h-14;tip.style.left=x+"px";tip.style.top=y+"px"}
+function hideTip(){tip.style.opacity=0}
+function bindTips(root){root.querySelectorAll("[data-tip]").forEach(el=>{el.addEventListener("mouseenter",e=>showTip(e,el.dataset.tip));el.addEventListener("mousemove",moveTip);el.addEventListener("mouseleave",hideTip)})}
+
+function niceMax(m){if(m<=5)return 5;if(m<=10)return 10;return Math.ceil(m/5)*5}
+function axisHtml(max){const step=max<=5?1:max<=10?2:5;let s="";for(let v=0;v<=max;v+=step)s+=`<span style="left:${v/max*100}%">${v}</span>`;return `<div class="axis"><span></span><div class="ticks">${s}</div><span></span></div>`}
+
+function render(){
+  // KPIs are computed on everything except the view toggle + kpi filter, so they stay stable as context
+  const kState=state.kpi; state.kpi="";
+  const base=filtered(true); state.kpi=kState;
+  const open=base.filter(d=>d.open), done=base.length-open.length;
+  const K=[
+    {k:"open",l:"Open items",v:open.length,m:`${open.filter(d=>d.t==="Project").length} projects · ${open.filter(d=>d.t==="Task").length} tasks`},
+    {k:"od",l:"Overdue",v:open.filter(d=>d.od).length,m:"past target date",crit:1},
+    {k:"nodate",l:"No target date",v:open.filter(d=>!d.dueD).length,m:"open, undated"},
+    {k:"wait",l:"Waiting on others",v:open.filter(d=>d.waiting).length,m:"per remarks"},
+    {k:"unset",l:"No status set",v:base.filter(d=>d.st==="unset").length,m:"status column blank"},
+    {k:"done",l:"Completed / closed",v:done,m:`${base.length?Math.round(done/base.length*100):0}% of ${base.length}`,bar:base.length?done/base.length:0}
+  ];
+  $("kpis").innerHTML=K.map(x=>`<button type="button" class="kpi${x.crit&&x.v?" crit":""}" data-k="${x.k}" aria-pressed="${state.kpi===x.k}">
+    <span class="l">${x.l}</span><span class="v">${x.v}</span><span class="m">${x.m}</span>${x.bar!==undefined?`<span class="bar"><i style="width:${x.bar*100}%"></i></span>`:""}</button>`).join("");
+  $("kpis").querySelectorAll(".kpi").forEach(b=>b.onclick=()=>{const k=b.dataset.k;state.kpi=state.kpi===k?"":k;if(k==="done"&&state.kpi)setView("all");render()});
+
+  const rows=filtered(false);
+
+  // BU stacked bars
+  const byBU={};rows.forEach(d=>{(byBU[d.bu]??={bu:d.bu,n:0,od:0,c:{}});byBU[d.bu].n++;byBU[d.bu].c[d.st]=(byBU[d.bu].c[d.st]||0)+1;if(d.od)byBU[d.bu].od++});
+  const bus=Object.values(byBU).sort((a,b)=>b.n-a.n||a.bu.localeCompare(b.bu));
+  const bmax=niceMax(Math.max(1,...bus.map(b=>b.n)));
+  $("buChart").innerHTML=bus.length?bus.map(b=>{
+    const segs=ORDER.filter(k=>b.c[k]).map(k=>`<i style="width:calc(${b.c[k]/bmax*100}% - 2px);background:${css(STATUS[k].v)}"></i>`).join("");
+    const t=`<b>${esc(b.bu)} · ${b.n} item${b.n>1?"s":""}</b>`+ORDER.filter(k=>b.c[k]).map(k=>`<div class="r"><span>${STATUS[k].label}</span><span>${b.c[k]}</span></div>`).join("")+(b.od?`<div class="r"><span>Overdue</span><span>${b.od}</span></div>`:"");
+    return `<div class="hrow${state.bu===b.bu?" sel":""}" data-bu="${esc(b.bu)}" data-tip="${esc(t)}"><span class="lab">${esc(b.bu)}</span><div class="track">${segs}</div><span class="cnt">${b.n}</span></div>`}).join("")+axisHtml(bmax):`<div class="empty">No items match these filters.</div>`;
+  $("buChart").querySelectorAll(".hrow").forEach(r=>r.onclick=()=>{state.bu=state.bu===r.dataset.bu?"":r.dataset.bu;$("fBU").value=state.bu;hideTip();render()});
+  bindTips($("buChart"));
+
+  // Owner workload (open only)
+  const openRows=rows.filter(d=>d.open);
+  const byO={};openRows.forEach(d=>{(byO[d.o]??={o:d.o,n:0,od:0});byO[d.o].n++;if(d.od)byO[d.o].od++});
+  const own=Object.values(byO).sort((a,b)=>b.n-a.n||b.od-a.od);
+  const omax=niceMax(Math.max(1,...own.map(o=>o.n)));
+  $("ownChart").innerHTML=own.length?own.map(o=>{
+    const on=o.n-o.od;
+    const segs=(o.od?`<i style="width:calc(${o.od/omax*100}% - 2px);background:var(--crit)"></i>`:"")+(on?`<i style="width:calc(${on/omax*100}% - 2px);background:var(--accent)"></i>`:"");
+    return `<div class="hrow${state.owner===o.o?" sel":""}" data-o="${esc(o.o)}" data-tip="${esc(`<b>${esc(o.o)}</b><div class="r"><span>Open</span><span>${o.n}</span></div><div class="r"><span>Overdue</span><span>${o.od}</span></div>`)}"><span class="lab">${esc(o.o)}</span><div class="track">${segs}</div><span class="cnt">${o.n}</span></div>`}).join("")+axisHtml(omax):`<div class="empty">No open items.</div>`;
+  $("ownChart").querySelectorAll(".hrow").forEach(r=>r.onclick=()=>{state.owner=state.owner===r.dataset.o?"":r.dataset.o;$("fOwner").value=state.owner;hideTip();render()});
+  bindTips($("ownChart"));
+
+  // Timeline by month of target date (open)
+  const dated=openRows.filter(d=>d.dueD);
+  const mk=d=>d.getFullYear()*12+d.getMonth();
+  const nowK=mk(TODAY);
+  if(dated.length){
+    let lo=Math.min(...dated.map(d=>mk(d.dueD)),nowK),hi=Math.max(...dated.map(d=>mk(d.dueD)),nowK);
+    const cols=[];for(let k=lo;k<=hi;k++)cols.push({k,od:0,up:0});
+    dated.forEach(d=>{const c=cols[mk(d.dueD)-lo];d.od?c.od++:c.up++});
+    const tmax=Math.max(1,...cols.map(c=>c.od+c.up));
+    const mn=k=>new Date(Math.floor(k/12),k%12,1).toLocaleDateString("en-GB",{month:"short"});
+    $("tlChart").innerHTML=`<div class="tl">${cols.map(c=>{const n=c.od+c.up;const h=n/tmax*100;
+      return `<div class="col" data-tip="${esc(`<b>${mn(c.k)} ${Math.floor(c.k/12)}</b><div class="r"><span>Past due</span><span>${c.od}</span></div><div class="r"><span>Upcoming</span><span>${c.up}</span></div>`)}">
+      ${n?`<b style="bottom:calc(${h}% + 2px)">${n}</b>`:""}
+      ${c.up?`<i style="height:calc(${c.up/tmax*100}% - ${c.od?1:0}px);background:var(--s-prog)"></i>`:""}${c.up&&c.od?`<span class="gap"></span>`:""}
+      ${c.od?`<i style="height:calc(${c.od/tmax*100}% - ${c.up?1:0}px);background:var(--crit)"></i>`:""}</div>`}).join("")}</div>
+      <div class="tlx">${cols.map(c=>`<span class="${c.k===nowK?"now":""}">${mn(c.k)}</span>`).join("")}</div>`;
+    bindTips($("tlChart"));
+  } else $("tlChart").innerHTML=`<div class="empty">No open items with a target date.</div>`;
+  const undated=openRows.length-dated.length;
+  $("tlNote").textContent=`${undated} of ${openRows.length} open items have no target date and are not plotted. Highlighted month = current.`;
+
+  // Overdue attention list
+  const od=rows.filter(d=>d.od).sort((a,b)=>b.days-a.days);
+  $("attNote").textContent=od.length?`${od.length} item${od.length>1?"s":""}, oldest first`:"";
+  $("att").innerHTML=od.length?od.slice(0,9).map(d=>`<div class="att-item"><span class="days">${d.days}d</span>
+    <div><div class="att-d"><span class="bu">${esc(d.bu)}</span> · ${esc(d.d)}</div><div class="att-m">Due ${fmt(d.dueD)} · ${STATUS[d.st].label}${d.r?" · "+esc(d.r):""}</div></div><span class="who">${esc(d.o)}</span></div>`).join("")
+    +(od.length>9?`<div class="note" style="padding-top:8px">+${od.length-9} more in the table below</div>`:""):`<div class="empty">Nothing overdue in this selection.</div>`;
+
+  // Blocked list
+  const bl=rows.filter(d=>d.waiting);
+  $("blocked").innerHTML=bl.length?bl.map(d=>`<div class="att-item" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="att-d"><span class="bu">${esc(d.bu)}</span> · ${esc(d.d)}</div><div class="att-m">${esc(d.r)}</div></div><span class="who">${esc(d.o)}</span></div>`).join(""):`<div class="empty">No waiting items in this selection.</div>`;
+
+  // Table
+  const {k,dir}=state.sort;
+  const val=d=>k==="due"?(d.dueD?d.dueD.getTime():9e15):k==="st"?ORDER.indexOf(d.st):k==="u"?(d.u?-Date.parse(d.u):0):String(d[k]??"").toLowerCase();
+  rows.sort((a,b)=>{const x=val(a),y=val(b);return (x>y?1:x<y?-1:0)*dir||a.idx-b.idx});
+  $("rowCount").textContent=`· ${rows.length}`;
+  const fresh=Date.now()-864e5;
+  $("tbody").innerHTML=rows.length?rows.map(d=>`<tr class="${d.od?"od":""}" data-id="${esc(d.id)}" tabindex="0">
+    <td class="bu">${esc(d.bu)}</td>
+    <td class="desc">${esc(d.d)}${d.p?`<span class="tag pr">P${esc(d.p)}</span>`:""}${d.od?`<span class="tag od">${d.days}d overdue</span>`:""}${d.sec||d.n?`<span class="src">${esc(d.sec||"")}${d.n?" · #"+esc(d.n):""}</span>`:""}</td>
+    <td class="type">${esc(d.t)}</td>
+    <td class="mono">${esc(d.o)}</td>
+    <td class="mono ${d.od?"due-od":""}">${fmt(d.dueD)}</td>
+    <td><span class="pill ${STATUS[d.st].cls}"><i class="sw" style="background:${css(STATUS[d.st].v)}"></i>${d.s&&d.st!=="unset"?esc(d.s[0].toUpperCase()+d.s.slice(1)):STATUS[d.st].label}</span></td>
+    <td class="rem">${esc(d.r||"")}</td>
+    <td class="upd ${d.u&&Date.parse(d.u)>fresh?"fresh":""}">${d.u?new Date(d.u).toLocaleDateString("en-GB",{day:"2-digit",month:"short"}):"—"}</td>
+    <td class="act">${canWrite?`<select class="rowact" data-id="${esc(d.id)}" aria-label="Actions for this item"><option value="">Actions ▾</option><option value="edit">✎ Edit</option>${d.open?`<option value="done">✓ Mark done</option>`:`<option value="reopen">↺ Reopen</option>`}<option value="del">🗑 Delete</option></select>`:""}</td></tr>`).join(""):`<tr><td colspan="9" class="empty">No items match these filters.</td></tr>`;
+  document.querySelectorAll("th[data-k]").forEach(th=>{th.querySelector(".arr")?.remove();if(th.dataset.k===k)th.insertAdjacentHTML("beforeend",`<span class="arr">${dir>0?"▲":"▼"}</span>`)});
+}
+function reload(){enrich();refreshMeta();render();}
+const _render0=render;render=function(){_render0();try{qfRender()}catch(e){}};
+
+function setView(v){state.view=v;document.querySelectorAll("#fView button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v))}
+document.querySelectorAll("#fView button").forEach(b=>b.onclick=()=>{setView(b.dataset.v);render()});
+[["fBU","bu"],["fOwner","owner"],["fType","type"]].forEach(([id,k])=>$(id).onchange=e=>{
+  if(e.target.value==="__mgr"){e.target.value=state[k];openMgr(k==="bu"?"bu":"o");return;}
+  state[k]=e.target.value;render()});
+
+/* ---------- manage dropdown values (BU / owner) ---------- */
+let mgrKind=null;
+const MG={bu:{title:"Manage business units",pseudo:"—",note:"Rename or merge a business unit into another, or delete it. Deleting a BU permanently removes all of its items for everyone, and clears the BU from its quick follow-ups."},
+  o:{title:"Manage owners",pseudo:"Unassigned",note:"Rename or merge an owner into another, or remove them. Removing an owner keeps their items and marks them Unassigned."}};
+function openMgr(kind){mgrKind=kind;$("mgrTitle").textContent=MG[kind].title;$("mgrNote").textContent=MG[kind].note;renderMgr();$("scrim").hidden=false;$("mgr").hidden=false;}
+function closeMgr(){mgrKind=null;$("mgr").hidden=true;if(!editing)$("scrim").hidden=true;}
+$("mgrClose").onclick=closeMgr;
+$("scrim").addEventListener("click",()=>{if(mgrKind)closeMgr()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&mgrKind)closeMgr()});
+function renderMgr(){
+  if(!mgrKind)return;const k=mgrKind,pseudo=MG[k].pseudo;
+  const cnt={};DATA.forEach(d=>{(k==="o"?ownersOf(d):[d[k]]).forEach(v=>{if(v!==pseudo)cnt[v]=(cnt[v]||0)+1})});
+  const vals=Object.keys(cnt).sort((a,b)=>a.localeCompare(b));
+  $("mgrList").innerHTML=vals.length?vals.map(v=>`<div class="mgr-it" data-v="${esc(v)}">
+    <div class="mgr-top"><span class="mgr-name">${esc(v)}</span><span class="mgr-cnt">${cnt[v]} item${cnt[v]>1?"s":""}</span></div>
+    <div class="mgr-ctl"><input placeholder="Rename / merge into…" list="${k==="bu"?"dl_bu":"dl_o"}" aria-label="New name for ${esc(v)}"><button type="button" class="mini" data-mren>Apply</button><button type="button" class="mini del" data-mdel>${k==="bu"?"Delete":"Remove"}</button></div></div>`).join("")
+    :`<div class="empty">Nothing to manage.</div>`;
+}
+const _reload0=reload;reload=function(){_reload0();renderMgr()};
+async function mgrApply(v,nv){
+  const k=mgrKind,ids=DATA.filter(d=>k==="o"?ownersOf(d).includes(v):d[k]===v).map(d=>d.id);
+  for(const id of ids){const x=ITEMS.find(i=>i.id===id);if(!x)continue;
+    if(k==="o"){const toks=ownersOf({o:x.o||"Unassigned"}).map(t=>t===v?(nv||""):t).filter(Boolean);await writeItem({...x,o:[...new Set(toks)].join(", ")||null});}
+    else await writeItem({...x,[k]:nv});}
+  if(k==="o"&&OWNER_EMAILS[v]){if(nv&&!OWNER_EMAILS[nv])await owSaveEmail(nv,OWNER_EMAILS[v]);await owSaveEmail(v,"");}
+  if(k==="bu")for(const q of QF_ITEMS.filter(q=>(q.bu||"")===v))await qfWrite({...q,bu:nv});
+  else for(const q of QF_ITEMS.filter(q=>(q.who||"")===v))await qfWrite({...q,who:nv});
+  if(state[k==="bu"?"bu":"owner"]===v){state[k==="bu"?"bu":"owner"]=nv||"";}
+  return ids.length;
+}
+async function mgrDelete(v){
+  const k=mgrKind;
+  if(k!=="bu")return mgrApply(v,null);
+  const ids=DATA.filter(d=>d.bu===v).map(d=>d.id);
+  for(const id of ids)await removeItem(id);
+  for(const q of QF_ITEMS.filter(q=>(q.bu||"")===v))await qfWrite({...q,bu:null});
+  if(state.bu===v)state.bu="";
+  return ids.length;
+}
+$("mgrList").addEventListener("click",async e=>{
+  const it=e.target.closest(".mgr-it");if(!it)return;const v=it.dataset.v,k=mgrKind;
+  if(e.target.closest("[data-mren]")){const nv=it.querySelector("input").value.trim();if(!nv||nv===v)return;
+    e.target.disabled=true;try{const n=await mgrApply(v,nv);toast(`${v} → ${nv} (${n} item${n>1?"s":""})`);reload();}catch(err){dbFail(err,"the change");e.target.disabled=false}return;}
+  if(e.target.closest("[data-mdel]")){const n=DATA.filter(d=>d[k]===v).length;
+    it.querySelector(".mgr-conf")?.remove();
+    it.insertAdjacentHTML("beforeend",`<div class="mgr-conf">${k==="bu"?`Delete ${esc(v)} and its ${n} item${n>1?"s":""} permanently?`:`Remove ${esc(v)}? Their ${n} item${n>1?"s":""} become Unassigned.`}<button type="button" class="mini del" data-myes>${k==="bu"?"Delete":"Remove"}</button><button type="button" class="mini" data-mno>Cancel</button></div>`);return;}
+  if(e.target.closest("[data-mno]")){it.querySelector(".mgr-conf")?.remove();return;}
+  if(e.target.closest("[data-myes]")){e.target.disabled=true;
+    try{const n=await mgrDelete(v);toast(k==="bu"?`Deleted ${v} (${n} item${n>1?"s":""})`:`Removed ${v} · ${n} item${n>1?"s":""} unassigned`);reload();}catch(err){dbFail(err,k==="bu"?"the delete":"the change");e.target.disabled=false}}
+});
+$("mgrList").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input")){e.target.closest(".mgr-it").querySelector("[data-mren]").click()}});
+$("stLegend").addEventListener("click",e=>{const el=e.target.closest("[data-st]");if(el)toggleStatus(el.dataset.st)});
+$("stLegend").addEventListener("keydown",e=>{const el=e.target.closest("[data-st]");if(el&&(e.key==="Enter"||e.key===" ")){e.preventDefault();toggleStatus(el.dataset.st)}});
+$("fQ").oninput=e=>{state.q=e.target.value;render()};
+$("reset").onclick=()=>{Object.assign(state,{bu:"",owner:"",status:new Set(),type:"",q:"",kpi:""});syncStatus();["fBU","fOwner","fType","fQ"].forEach(i=>$(i).value="");setView("open");render()};
+document.querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{const k=th.dataset.k;state.sort=state.sort.k===k?{k,dir:-state.sort.dir}:{k,dir:1};render()});
+
+/* ---------- edit drawer ---------- */
+let editing=null;
+const F=["bu","t","d","o","p","due","s","r"];
+function openEditor(id){
+  const x=id?ITEMS.find(i=>i.id===id):null;
+  editing=x?{...x}:{id:"n"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),ord:Math.max(0,...ITEMS.map(i=>i.ord||0))+1,sec:"Open tracker"};
+  $("dTitle").textContent=x?"Edit item":"Add item";
+  F.forEach(f=>{const el=$("e_"+f);let v=editing[f]??"";
+    if(f==="s"&&v){const m=[...el.options].find(o=>o.value.toLowerCase()===String(v).toLowerCase());v=m?m.value:v;if(!m)el.insertAdjacentHTML("beforeend",`<option>${esc(v)}</option>`);}
+    el.value=v;});
+  $("e_meta").textContent=x?(x.u?"Last updated "+new Date(x.u).toLocaleString("en-GB"):"Not edited since import")+(x.n?` · Sheet #${x.n}`:""):"";
+  $("dDel").hidden=!x;$("delConfirm").hidden=true;
+  [...$("dForm").elements].forEach(el=>el.disabled=!canWrite);$("dSave").disabled=!canWrite;$("dDel").disabled=!canWrite;
+  $("scrim").hidden=false;$("drawer").hidden=false;setTimeout(()=>$("e_d").focus(),30);
+}
+function closeEditor(){$("scrim").hidden=true;$("drawer").hidden=true;editing=null;}
+$("dClose").onclick=$("dCancel").onclick=$("scrim").onclick=closeEditor;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&editing)closeEditor()});
+$("addBtn").onclick=()=>openEditor(null);
+$("tbody").addEventListener("change",async e=>{
+  const sel=e.target.closest(".rowact");if(!sel)return;
+  const id=sel.dataset.id,a=sel.value,x=ITEMS.find(i=>i.id===id);sel.value="";if(!x||!a)return;
+  if(a==="edit"){openEditor(id);return;}
+  if(a==="done"||a==="reopen"){
+    try{await writeItem({...x,s:a==="done"?"Completed":"In progress"});toast((a==="done"?"Marked completed: ":"Reopened: ")+x.d.slice(0,60));}catch(err){dbFail(err,"the change")}
+    return;}
+  if(a==="del"){
+    const td=sel.closest("td");
+    td.innerHTML=`<span class="rowdel">Delete?<button type="button" class="mini del" data-delyes="${esc(id)}">Yes</button><button type="button" class="mini" data-delno>No</button></span>`;
+    td.querySelector("[data-delno]").focus();}
+});
+$("tbody").addEventListener("click",e=>{
+  if(e.target.closest(".rowact")){e.stopPropagation();return;}
+  const dy=e.target.closest("[data-delyes]");
+  if(dy){e.stopPropagation();const x=ITEMS.find(i=>i.id===dy.dataset.delyes);
+    removeItem(dy.dataset.delyes).then(()=>toast("Deleted: "+(x?x.d.slice(0,60):"item"))).catch(err=>dbFail(err,"the delete"));return;}
+  if(e.target.closest("[data-delno]")){e.stopPropagation();render();return;}
+  const done=e.target.closest("[data-done]");
+  if(done){e.stopPropagation();const x=ITEMS.find(i=>i.id===done.dataset.done);if(!x)return;
+    writeItem({...x,s:"Completed"}).then(()=>toast("Marked completed: "+x.d.slice(0,60))).catch(err=>dbFail(err,"the change"));return;}
+  const tr=e.target.closest("tr[data-id]");if(tr&&!READONLY)openEditor(tr.dataset.id);
+});
+$("tbody").addEventListener("keydown",e=>{if(e.target.closest(".rowact,.rowdel"))return;if(e.key==="Enter"){const tr=e.target.closest("tr[data-id]");if(tr)openEditor(tr.dataset.id)}});
+$("dForm").onsubmit=async e=>{
+  e.preventDefault();if(!editing)return;
+  const item={...editing};
+  F.forEach(f=>{const v=$("e_"+f).value.trim();item[f]=v===""?null:(f==="p"?Number(v):v)});
+  $("dSave").disabled=true;
+  try{await writeItem(item);toast("Saved");closeEditor();}catch(err){dbFail(err,"this item")}
+  finally{$("dSave").disabled=!canWrite}
+};
+$("dDel").onclick=()=>{$("delConfirm").hidden=false};
+$("delNo").onclick=()=>{$("delConfirm").hidden=true};
+$("delYes").onclick=async()=>{const id=editing?.id;if(!id)return;try{await removeItem(id);toast("Item deleted");closeEditor();}catch(err){dbFail(err,"the delete")}};
+
+/* ---------- Excel import / export ---------- */
+const HDR={"#":"n","bu":"bu","description":"d","pr.":"p","pr":"p","priority":"p","type":"t","res. person":"o","owner":"o","status":"s","remarks":"r","section":"sec"};
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+function parseWorkbook(wb){
+  const name=wb.SheetNames.find(n=>/project/i.test(n))||wb.SheetNames[0];
+  const rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,raw:true,defval:null});
+  let map=null,sec=0;const out=[];
+  for(const r of rows){
+    const labels=r.map(c=>typeof c==="string"?c.trim().toLowerCase():"");
+    if(labels.includes("description")){map={};labels.forEach((l,i)=>{if(HDR[l])map[HDR[l]]=i;else if(l.startsWith("target"))map.due=i;});sec++;continue;}
+    if(!map)continue;
+    const g=k=>map[k]===undefined?null:r[map[k]];
+    const d=g("d");if(d===null||String(d).trim()==="")continue;
+    let due=g("due");
+    if(due instanceof Date)due=iso(due);
+    else if(typeof due==="number")due=iso(new Date(Math.round((due-25569)*864e5)+new Date().getTimezoneOffset()*6e4));
+    else if(typeof due==="string"&&due.trim()){const t=new Date(due);due=isNaN(t)?null:iso(t);}else due=null;
+    let t=g("t");t=t&&/project/i.test(t)?"Project":t?"Task":null;
+    const s=v=>v===null||v===undefined||String(v).trim()===""?null:String(v).replace(/\s+/g," ").trim();
+    out.push({id:"x"+String(out.length+1).padStart(3,"0"),ord:out.length+1,n:g("n"),bu:s(g("bu")),d:s(d),p:g("p")?Number(g("p"))||null:null,t,o:s(g("o")),due,s:s(g("s")),r:s(g("r")),sec:(g("sec")&&String(g("sec")).trim())||(sec>1?"Completed log":"Open tracker"),u:null});
+  }
+  return {sheet:name,items:out};
+}
+$("impBtn").onclick=()=>{if(typeof XLSX==="undefined"){toast("Excel import needs an internet connection to load.");return;}$("impFile").value="";$("impFile").click();};
+$("impFile").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{
+    const wb=XLSX.read(await f.arrayBuffer(),{type:"array",cellDates:true});
+    const {sheet,items}=parseWorkbook(wb);
+    const box=$("impBox");
+    if(!items.length){box.hidden=false;box.innerHTML=`<strong>No items found in ${esc(f.name)}.</strong><span class="note">The sheet needs a header row with BU, Description, Type, Res. person, Target date, Status and Remarks columns, like Book_35.xlsx.</span><div class="btns"><button class="btn" type="button" id="impX">Close</button></div>`;$("impX").onclick=()=>box.hidden=true;return;}
+    const open=items.filter(i=>norm(i.s)!=="done").length;
+    box.hidden=false;
+    box.innerHTML=`<strong>Replace the tracker with ${esc(f.name)}?</strong>
+      <span>Found ${items.length} items (${open} open) on sheet “${esc(sheet)}”. This replaces all ${ITEMS.length} current items${MODE==="live"?" for everyone who uses this page":""}. Edits made here since the last import will be lost unless you export first.</span>
+      <div class="btns"><button class="btn primary" type="button" id="impGo">Replace ${ITEMS.length} items with ${items.length}</button><button class="btn" type="button" id="impExp">Export current first</button><button class="btn" type="button" id="impX">Cancel</button></div>`;
+    $("impX").onclick=()=>box.hidden=true;
+    $("impExp").onclick=exportXlsx;
+    $("impGo").onclick=async()=>{
+      $("impGo").disabled=true;$("impGo").textContent="Importing…";
+      const now=new Date().toISOString();items.forEach(i=>i.u=now);
+      try{await replaceAll(items);box.hidden=true;toast(`Imported ${items.length} items from ${f.name}`);}
+      catch(err){dbFail(err,"the import");$("impGo").disabled=false;$("impGo").textContent="Try again";}
+    };
+  }catch(err){toast("Couldn't read that file. Save it as .xlsx and try again.");}
+};
+async function exportXlsx(){
+  if(typeof XLSX==="undefined"){toast("Excel export needs an internet connection to load.");return;}
+  const rows=DATA.map(d=>({"#":d.n??"","BU":d.bu,"Description":d.d,"Pr.":d.p??"","Type":d.t==="—"?"":d.t,"Res. person":d.o==="Unassigned"?"":d.o,
+    "Target date complete":d.dueD||"","Status":d.s||"","Remarks":d.r||"","Overdue (days)":d.od?d.days:"","Section":d.sec||"","Last updated":d.u?new Date(d.u):""}));
+  const ws=XLSX.utils.json_to_sheet(rows,{cellDates:true,dateNF:"dd-mmm-yy"});
+  ws["!cols"]=[4,8,60,5,9,12,14,13,50,10,14,16].map(w=>({wch:w}));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Projects");
+  const qws=XLSX.utils.json_to_sheet(QF_ITEMS.map(x=>({"Follow up":x.text,"With / owner":x.who||"","BU":x.bu||"","Follow up by":x.due?new Date(x.due+"T00:00:00"):"","Done":x.done?"Yes":"","Done on":x.doneAt?new Date(x.doneAt):"","Added":x.created?new Date(x.created):""})),{cellDates:true,dateNF:"dd-mmm-yy"});
+  qws["!cols"]=[60,16,8,14,6,14,14].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,qws,"Quick follow-ups");
+  const os=ownerStats(DATA).sort((a,b)=>b.open-a.open||a.o.localeCompare(b.o));
+  const ows=XLSX.utils.json_to_sheet(os.map(m=>({"Owner":m.o,"Open":m.open,"Overdue":m.od,"In progress":m.c.prog||0,"Pending vendor":m.c.wait||0,"Not started":m.c.new||0,"On hold":m.c.hold||0,"No status":m.c.unset||0,"Completed / closed":m.done,"Total":m.n,"Done %":Math.round(m.pct*100),"Oldest overdue (days)":m.maxOd||"","Next due":m.next||""})),{cellDates:true,dateNF:"dd-mmm-yy"});
+  const olr=[];os.forEach(m=>m.items.slice().sort((a,b)=>(a.open===b.open?0:a.open?-1:1)||(b.days-a.days)||((a.dueD?a.dueD.getTime():9e15)-(b.dueD?b.dueD.getTime():9e15))).forEach(d=>olr.push({"Owner":m.o,"BU":d.bu,"Description":d.d,"Type":d.t==="—"?"":d.t,"Status":d.s||"","Target date":d.dueD||"","Overdue (days)":d.od?d.days:"","Open":d.open?"Yes":"","Remarks":d.r||"","Shared with":ownersOf(d).length>1?d.o:""})));
+  const olws=XLSX.utils.json_to_sheet(olr,{cellDates:true,dateNF:"dd-mmm-yy"});olws["!cols"]=[14,8,60,9,13,13,12,6,50,14].map(w=>({wch:w}));
+  ows["!cols"]=[16,7,8,11,14,11,8,10,17,7,8,20,12].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ows,"By owner");XLSX.utils.book_append_sheet(wb,olws,"Owner list");XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["Exported on",iso(new Date())],["Tracker date",iso(TODAY)],["Items",DATA.length]]),"Info");
+  const buf=XLSX.write(wb,{type:"array",bookType:"xlsx"});
+  const name=`IT_Followup_Tracker_${iso(new Date())}.xlsx`;
+  const dl=window.claude?.use?await window.claude.use("downloads").catch(()=>null):null;
+  if(dl){try{await dl.save({filename:name,data:new Uint8Array(buf)});toast("Exported "+name);}catch(e){if(e&&e.code!=="declined")toast("Export isn't available here.");}return;}
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+}
+$("expBtn").onclick=exportXlsx;
+
+/* ---------- quick follow-ups ---------- */
+const QK="itFollowupTracker.quick.2026-10-21";
+let QF_ITEMS=[],qfShowDone=false;
+const qfLoadLocal=()=>{try{const v=JSON.parse(localStorage.getItem(QK)||"[]");return Array.isArray(v)?v:[]}catch(e){return[]}};
+const qfSaveLocal=()=>{try{localStorage.setItem(QK,JSON.stringify(QF_ITEMS))}catch(e){}};
+const qfClean=o=>{const b={};for(const k of ["text","who","bu","due","done","doneAt","created","u"])b[k]=o[k]??null;return b};
+async function qfWrite(x){x.u=new Date().toISOString();
+  if(db){await db.collection("followups").doc(x.id).set(qfClean(x));}
+  else{const i=QF_ITEMS.findIndex(y=>y.id===x.id);i>=0?QF_ITEMS[i]=x:QF_ITEMS.push(x);qfSaveLocal();qfRender();}}
+async function qfRemove(id){
+  if(db){await db.collection("followups").doc(id).delete();}
+  else{QF_ITEMS=QF_ITEMS.filter(y=>y.id!==id);qfSaveLocal();qfRender();}}
+const qfDate=k=>{if(k==="")return "";const d=new Date(TODAY);if(k==="fri"){let n=(5-d.getDay()+7)%7;d.setDate(d.getDate()+(n||7));}else d.setDate(d.getDate()+Number(k));return iso(d)};
+function qfBucket(x){if(!x.due)return"nd";const d=new Date(x.due+"T00:00:00"),n=Math.round((d-TODAY)/864e5);return n<0?"od":n===0?"td":n<=7?"wk":"lt"}
+const QB={od:["Overdue","od"],td:["Today","td"],wk:["Next 7 days",""],lt:["Later",""],nd:["No date",""]};
+function qfRender(){
+  const L=$("qfList");if(!L)return;
+  const pass=x=>(!state.bu||(x.bu||"")===state.bu)&&(!state.owner||(x.who||"Unassigned")===state.owner);
+  const all=QF_ITEMS.filter(pass),open=all.filter(x=>!x.done),done=all.filter(x=>x.done);
+  const odN=open.filter(x=>qfBucket(x)==="od").length,tdN=open.filter(x=>qfBucket(x)==="td").length;
+  $("qfCount").textContent=`· ${open.length} open`+(odN?` · ${odN} overdue`:"")+(tdN?` · ${tdN} today`:"");
+  $("qfDoneT").textContent=qfShowDone?`Hide done (${done.length})`:`Show done (${done.length})`;
+  $("qfDoneT").setAttribute("aria-pressed",qfShowDone);
+  const byDue=(a,b)=>(a.due||"9999").localeCompare(b.due||"9999")||String(a.created||"").localeCompare(String(b.created||""));
+  const row=x=>{const b=qfBucket(x),dd=x.due?new Date(x.due+"T00:00:00"):null;
+    const lab=!dd?"":b==="od"?`${Math.round((TODAY-dd)/864e5)}d overdue`:b==="td"?"Today":fmt(dd);
+    return `<div class="qf-it${x.done?" done":""}" data-q="${esc(x.id)}"><input type="checkbox" aria-label="Mark done" ${x.done?"checked":""} ${canWrite?"":"disabled"}>
+      <div><div class="qf-t">${esc(x.text)}</div><div class="qf-m">${lab&&!x.done?`<span class="qf-due ${b==="od"||b==="td"?b:""}">${lab}</span>`:""}${x.bu?`<span class="bu">${esc(x.bu)}</span>`:""}${x.who?`<span class="who">${esc(x.who)}</span>`:""}${x.done&&x.doneAt?`<span>done ${new Date(x.doneAt).toLocaleDateString("en-GB",{day:"2-digit",month:"short"})}</span>`:""}</div></div>
+      <div class="qf-a">${canWrite&&!x.done?`<button type="button" class="mini" data-pro title="Add to the main tracker as a task">→ Tracker</button>`:""}${canWrite?`<button type="button" class="mini x" data-del title="Delete" aria-label="Delete">✕</button>`:""}</div></div>`};
+  let h="";
+  for(const k of ["od","td","wk","lt","nd"]){const g=open.filter(x=>qfBucket(x)===k).sort(byDue);if(g.length)h+=`<div class="qf-grp ${QB[k][1]}">${QB[k][0]} · ${g.length}</div>`+g.map(row).join("");}
+  if(qfShowDone&&done.length)h+=`<div class="qf-grp">Done · ${done.length}</div>`+done.sort((a,b)=>String(b.doneAt||"").localeCompare(String(a.doneAt||""))).map(row).join("");
+  L.innerHTML=h||`<div class="empty" style="grid-column:1/-1">No quick follow-ups${state.bu||state.owner?" for this filter":""}. Add one above — it takes a second.</div>`;
+  ["qfText","qfWho","qfBU","qfDue","qfAdd"].forEach(id=>$(id).disabled=!canWrite);
+}
+let qfPick=null;
+$("qfChips").addEventListener("click",e=>{const c=e.target.closest("[data-q]");if(!c)return;$("qfDue").value=qfDate(c.dataset.q);qfSyncChips();$("qfText").focus()});
+function qfSyncChips(){const v=$("qfDue").value;document.querySelectorAll("#qfChips [data-q]").forEach(c=>c.setAttribute("aria-pressed",qfDate(c.dataset.q)===v))}
+$("qfDue").addEventListener("input",qfSyncChips);
+$("qfForm").onsubmit=async e=>{e.preventDefault();const t=$("qfText").value.trim();if(!t)return;
+  const now=new Date().toISOString();
+  const x={id:"q"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),text:t,who:$("qfWho").value.trim()||null,bu:$("qfBU").value.trim()||null,due:$("qfDue").value||null,done:false,doneAt:null,created:now};
+  $("qfAdd").disabled=true;
+  try{await qfWrite(x);$("qfText").value="";$("qfText").focus();}catch(err){dbFail(err,"the follow-up")}finally{$("qfAdd").disabled=!canWrite}};
+$("qfDoneT").onclick=()=>{qfShowDone=!qfShowDone;qfRender()};
+$("qfList").addEventListener("change",e=>{if(e.target.type!=="checkbox")return;const id=e.target.closest("[data-q]").dataset.q,x=QF_ITEMS.find(y=>y.id===id);if(!x)return;
+  const on=e.target.checked;qfWrite({...x,done:on,doneAt:on?new Date().toISOString():null}).then(()=>on&&toast("Done: "+x.text.slice(0,60))).catch(err=>dbFail(err,"the change"))});
+$("qfList").addEventListener("click",async e=>{const it=e.target.closest("[data-q]");if(!it)return;const x=QF_ITEMS.find(y=>y.id===it.dataset.q);if(!x)return;
+  if(e.target.closest("[data-del]")){try{await qfRemove(x.id);toast("Follow-up deleted")}catch(err){dbFail(err,"the delete")}}
+  else if(e.target.closest("[data-pro]")){
+    const item={id:"n"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),ord:Math.max(0,...ITEMS.map(i=>i.ord||0))+1,sec:"Open tracker",
+      bu:x.bu||"—",d:x.text,t:"Task",o:x.who,due:x.due,s:"Not started",r:"From quick follow-up",p:null,n:null};
+    try{await writeItem(item);await qfWrite({...x,done:true,doneAt:new Date().toISOString()});toast("Added to tracker: "+x.text.slice(0,50))}catch(err){dbFail(err,"the item")}}
+});
+$("qfList").addEventListener("dblclick",e=>{const t=e.target.closest(".qf-t");if(!t||!canWrite)return;const it=t.closest("[data-q]"),x=QF_ITEMS.find(y=>y.id===it.dataset.q);if(!x)return;
+  t.innerHTML=`<input class="qf-edit" value="${esc(x.text)}">`;const inp=t.firstChild;inp.focus();inp.select();let fin=false;
+  const end=async ok=>{if(fin)return;fin=true;const v=inp.value.trim();if(ok&&v&&v!==x.text){try{await qfWrite({...x,text:v})}catch(err){dbFail(err,"the change")}}qfRender()};
+  inp.onkeydown=ev=>{if(ev.key==="Enter")end(true);if(ev.key==="Escape"){ev.stopPropagation();end(false)}};inp.onblur=()=>end(true)});
+
+/* ---------- owner breakdown tab ---------- */
+const ownersOf=d=>d.o==="Unassigned"?["Unassigned"]:[...new Set(String(d.o).split(/\s*(?:,|&|\/|\band\b)\s*/i).map(s=>s.trim()).filter(Boolean))];
+let owSel=null,owSort={k:"open",dir:-1},owList=[];
+function ownerBase(){const o=state.owner,k=state.kpi;state.owner="";state.kpi="";const r=filtered(true);state.owner=o;state.kpi=k;return r;}
+function ownerStats(rows){
+  const M={};
+  rows.forEach(d=>ownersOf(d).forEach(o=>{const m=M[o]??={o,c:{},n:0,open:0,od:0,maxOd:0,next:null,items:[]};
+    m.n++;m.c[d.st]=(m.c[d.st]||0)+1;m.items.push(d);
+    if(d.open){m.open++;if(d.od){m.od++;m.maxOd=Math.max(m.maxOd,d.days)}else if(d.dueD&&(!m.next||d.dueD<m.next))m.next=d.dueD;}}));
+  return Object.values(M).map(m=>({...m,done:m.c.done||0,pct:m.n?(m.c.done||0)/m.n:0}));
+}
+const owVal=(m,k)=>k==="o"?m.o.toLowerCase():k==="mix"||k==="n"?m.n:k==="next"?(m.next?m.next.getTime():9e15):k in STATUS&&k!=="done"?(m.c[k]||0):m[k];
+$("owLegend").innerHTML=ORDER.map(k=>`<span><i class="sw" style="background:${css(STATUS[k].v)}"></i>${STATUS[k].label}</span>`).join("");
+function ownerRender(){
+  if(!$("paneOw"))return;
+  const rows=ownerBase(),S=ownerStats(rows);
+  $("tabOwN").textContent=S.length;
+  const {k,dir}=owSort;
+  S.sort((a,b)=>{const x=owVal(a,k),y=owVal(b,k);return (x>y?1:x<y?-1:0)*dir||b.open-a.open||a.o.localeCompare(b.o)});
+  owList=S.map(m=>m.o);
+  if(state.owner&&owList.includes(state.owner)&&!owSel)owSel=state.owner;
+  if(!owSel||!owList.includes(owSel))owSel=(S.slice().sort((a,b)=>b.open-a.open||b.od-a.od)[0]||{}).o||null;
+  const mx=Math.max(1,...S.map(m=>m.n));
+  const num=(v,cls)=>v?`<td class="num ${cls||""}">${v}</td>`:`<td class="num zero">·</td>`;
+  $("owCount").textContent=`· ${S.length} owner${S.length===1?"":"s"}`;
+  $("owBody").innerHTML=S.length?S.map(m=>{
+    const segs=ORDER.filter(s=>m.c[s]).map(s=>`<i style="width:calc(${m.c[s]/mx*100}% - 2px);background:${css(STATUS[s].v)}"></i>`).join("");
+    const t=`<b>${esc(m.o)} · ${m.n} item${m.n>1?"s":""}</b>`+ORDER.filter(s=>m.c[s]).map(s=>`<div class="r"><span>${STATUS[s].label}</span><span>${m.c[s]}</span></div>`).join("");
+    return `<tr class="${m.o===owSel?"sel":""}" data-ow="${esc(m.o)}" tabindex="0">
+      <td class="own">${esc(m.o)}</td><td class="mix"><div class="track" data-tip="${esc(t)}">${segs}</div></td>
+      ${num(m.open)}${num(m.od,"crit")}${num(m.c.prog)}${num(m.c.wait)}${num(m.c.new)}${num(m.c.hold)}${num(m.c.unset)}${num(m.done)}${num(m.n)}
+      <td class="mono"><span class="pct"><i style="width:${Math.round(m.pct*100)}%"></i></span>${Math.round(m.pct*100)}%</td>
+      ${m.maxOd?`<td class="num crit">${m.maxOd}d</td>`:`<td class="num zero">·</td>`}
+      <td class="mono">${m.next?fmt(m.next):"—"}</td></tr>`}).join(""):`<tr><td colspan="14" class="empty">No items match these filters.</td></tr>`;
+  const c=s=>rows.filter(d=>d.st===s).length,op=rows.filter(d=>d.open),odr=op.filter(d=>d.od);
+  $("owFoot").innerHTML=S.length?`<tr><td>All items</td><td></td>${num(op.length)}${num(odr.length,"crit")}${num(c("prog"))}${num(c("wait"))}${num(c("new"))}${num(c("hold"))}${num(c("unset"))}${num(c("done"))}${num(rows.length)}
+    <td class="mono">${rows.length?Math.round(c("done")/rows.length*100):0}%</td>${odr.length?`<td class="num crit">${Math.max(...odr.map(d=>d.days))}d</td>`:`<td class="num zero">·</td>`}<td></td></tr>`:"";
+  const shared=rows.filter(d=>ownersOf(d).length>1).length;
+  $("owNote").textContent=(shared?`${shared} item${shared>1?"s have":" has"} more than one owner and count${shared>1?"":"s"} once for each, so owner rows can add up to more than the All items row. `:"")+"Open = not completed or closed. The table counts all items; the owner list below follows the View toggle.";
+  document.querySelectorAll("th[data-ok]").forEach(th=>{th.querySelector(".arr")?.remove();if(th.dataset.ok===k)th.insertAdjacentHTML("beforeend",`<span class="arr">${dir>0?"▲":"▼"}</span>`)});
+  bindTips($("owBody"));
+  ownerList(S);
+}
+let owClosed=new Set();
+function ownerList(S){
+  const D=$("owDetail"),showAll=state.view==="all";
+  const dn=d=>Math.round((d.dueD-TODAY)/864e5);
+  const rank=d=>!d.open?3:d.od?0:d.dueD?1:2;
+  const cmp=(a,b)=>rank(a)-rank(b)||(rank(a)===0?b.days-a.days:rank(a)===1?a.dueD-b.dueD:a.idx-b.idx);
+  const row=d=>{let b,cls;
+    if(!d.open){b="Done";cls="done"}else if(d.od){b=d.days+"d late";cls="od"}
+    else if(d.dueD){const n=dn(d);b=n===0?"Today":fmt(d.dueD);cls=n<=14?"soon":""}else{b="No date";cls="nd"}
+    const sh=ownersOf(d).length>1?`<span class="note">shared · ${esc(d.o)}</span>`:"";
+    return `<div class="owi${READONLY?" ro":""}" data-id="${esc(d.id)}"${READONLY?"":` tabindex="0" role="button" aria-label="Edit ${esc(d.d)}"`}><span class="dl ${cls}">${b}</span>
+      <div><div class="att-d"><span class="bu">${esc(d.bu)}</span> · ${esc(d.d)}${d.p?`<span class="tag pr">P${esc(d.p)}</span>`:""}</div>
+      <div class="att-m"><span class="pill ${STATUS[d.st].cls}"><i class="sw" style="background:${css(STATUS[d.st].v)}"></i>${STATUS[d.st].label}</span>${d.t&&d.t!=="—"?`<span class="type">${esc(d.t)}</span>`:""}${sh}${d.r?`<span>${esc(d.r)}</span>`:""}</div></div></div>`};
+  const shown=S.filter(m=>showAll||m.open);
+  const hidden=S.length-shown.length;
+  const nItems=shown.reduce((t,m)=>t+(showAll?m.n:m.open),0);
+  const secs=shown.map(m=>{
+    const its=m.items.filter(d=>showAll||d.open).sort(cmp);
+    const bu={};its.forEach(d=>bu[d.bu]=(bu[d.bu]||0)+1);
+    const buTxt=Object.entries(bu).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).map(([k,v])=>`${esc(k)} ${v}`).join(" · ");
+    return `<details class="owsec${m.o===owSel?" sel":""}" data-ow="${esc(m.o)}"${owClosed.has(m.o)?"":" open"}>
+      <summary><span class="ow-n">${esc(m.o)}</span><span class="ow-c"><b>${m.open}</b> open${m.od?` · <b class="crit">${m.od} overdue</b>`:""} · ${m.done} done of ${m.n}</span><span class="ow-bu">${buTxt}</span></summary>
+      <div class="owsec-b">${its.map(row).join("")}${owMailBar(m.o)}</div></details>`}).join("");
+  D.innerHTML=`<div class="ow-head"><div><h2>Owner list <span class="note">· ${shown.length} owner${shown.length===1?"":"s"} · ${nItems} item${nItems===1?"":"s"}</span></h2>
+      <div class="note">${showAll?"Showing open and completed items.":"Showing open items only. Switch View to All items to include completed ones."}${!showAll&&hidden?` ${hidden} owner${hidden>1?"s have":" has"} no open items and ${hidden>1?"are":"is"} hidden.`:""} Overdue first, then by target date. Click an item to edit it.</div></div>
+    <div class="ow-tools"><button type="button" class="btn" data-m365 title="Connect Microsoft 365 so the picture is included automatically">${m365Label()}</button><button type="button" class="btn" data-owexp="1">Expand all</button><button type="button" class="btn" data-owexp="0">Collapse all</button></div></div>
+    ${secs||`<div class="empty">No items match these filters.</div>`}`;
+}
+function owJump(o){owSel=o;owClosed.delete(o);hideTip();ownerRender();
+  const el=[...document.querySelectorAll(".owsec")].find(s=>s.dataset.ow===o);
+  if(el)el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});}
+$("owBody").addEventListener("click",e=>{const tr=e.target.closest("tr[data-ow]");if(tr)owJump(tr.dataset.ow)});
+$("owBody").addEventListener("keydown",e=>{if(e.key==="Enter"){const tr=e.target.closest("tr[data-ow]");if(tr)owJump(tr.dataset.ow)}});
+document.querySelectorAll("th[data-ok]").forEach(th=>th.onclick=()=>{const k=th.dataset.ok;owSort=owSort.k===k?{k,dir:-owSort.dir}:{k,dir:k==="o"||k==="next"?1:-1};ownerRender()});
+$("owDetail").addEventListener("click",e=>{
+  const x=e.target.closest("[data-owexp]");
+  if(x){const on=x.dataset.owexp==="1";document.querySelectorAll(".owsec").forEach(s=>{s.open=on;on?owClosed.delete(s.dataset.ow):owClosed.add(s.dataset.ow)});return;}
+  if(e.target.closest(".owmail"))return;
+  const r=e.target.closest(".owi[data-id]");if(r&&!READONLY)openEditor(r.dataset.id);
+});
+$("owDetail").addEventListener("toggle",e=>{const s=e.target;if(!s.matches||!s.matches(".owsec"))return;s.open?owClosed.delete(s.dataset.ow):owClosed.add(s.dataset.ow)},true);
+$("owDetail").addEventListener("keydown",e=>{if(e.key==="Enter"){const r=e.target.closest(".owi[data-id]");if(r&&!READONLY)openEditor(r.dataset.id)}});
+function setTab(t){const ow=t==="owners";$("paneOv").hidden=ow;$("paneOw").hidden=!ow;
+  $("tab-ov").setAttribute("aria-selected",!ow);$("tab-ow").setAttribute("aria-selected",ow);$("tab-ov").tabIndex=ow?-1:0;$("tab-ow").tabIndex=ow?0:-1;
+  try{history.replaceState(null,"",ow?"#owners":"#overview")}catch(e){}
+  if(ow)ownerRender();}
+$("tab-ov").onclick=()=>setTab("overview");$("tab-ow").onclick=()=>setTab("owners");
+document.querySelector(".tabs").addEventListener("keydown",e=>{if(e.key!=="ArrowLeft"&&e.key!=="ArrowRight")return;const ow=$("tab-ow").getAttribute("aria-selected")==="true";setTab(ow?"overview":"owners");$(ow?"tab-ov":"tab-ow").focus()});
+const _render1=render;render=function(){_render1();try{const ae=document.activeElement;if(!(ae&&ae.matches&&ae.matches(".owmail input[type=text]")))ownerRender()}catch(e){console.error(e)}};
+
+/* ---------- email an owner their open items ---------- */
+const OEK="itFollowupTracker.ownerEmails";
+let OWNER_EMAILS={};
+const owKey=o=>"o_"+String(o).replace(/[^A-Za-z0-9_.~:@+-]/g,"_").slice(0,180);
+const owEmailOK=v=>!v||v.split(/[;,]\s*/).filter(Boolean).every(x=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));
+let owWithImg=false;try{owWithImg=localStorage.getItem("itFollowupTracker.withImg2")==="1"}catch(e){}
+const OW_READY={},OW_DRAFT={},OW_READY_MS=10*60*1000;
+const OW_CH={outlook:{label:"✉ Email in Outlook",open:"Open Outlook ›",app:"Outlook"},teams:{label:"💬 Remind in Teams",open:"Open Teams ›",app:"Teams"}};
+const owIsReady=(o,ch)=>{const t=OW_READY[o+"|"+ch];return !!t&&Date.now()-t<OW_READY_MS};
+function owMailParts(o,img){
+  const m=ownerStats(DATA).find(x=>x.o===o);if(!m)return null;
+  const open=m.items.filter(d=>d.open);if(!open.length)return null;
+  const dn=d=>Math.round((d.dueD-TODAY)/864e5);
+  const od=open.filter(d=>d.od).sort((a,b)=>b.days-a.days);
+  const dated=open.filter(d=>!d.od&&d.dueD).sort((a,b)=>a.dueD-b.dueD);
+  const nd=open.filter(d=>!d.dueD);
+  const day=TODAY.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+  let n=0;const line=d=>{n++;const st=STATUS[d.st].label;
+    const when=d.od?`due ${fmt(d.dueD)}, ${d.days} days late`:d.dueD?`due ${fmt(d.dueD)}${dn(d)===0?" (today)":""}`:"no target date";
+    return `${n}. [${d.bu}] ${d.d} — ${when} — ${st}${d.r?`\n    Latest note: ${d.r}`:""}`;};
+  const sec=(t,a)=>a.length?`${t}\n${a.map(line).join("\n")}\n\n`:"";
+  const first=o==="Unassigned"?"team":o;
+  const subject=`IT follow-up: ${open.length} open item${open.length>1?"s":""}${od.length?` (${od.length} overdue)`:""} — ${o}`;
+  const body=img
+    ?`Hi ${first},\n\nPlease share a quick update on the open items in the picture below, as of ${day}. A revised target date for anything overdue would help.\n\nThanks,\n`
+    :`Hi ${first},\n\nPlease share a quick update on the open items below, as of ${day}. A revised target date for anything overdue would help.\n\n`+sec("OVERDUE",od)+sec("UPCOMING",dated)+sec("NO TARGET DATE YET",nd)+"Thanks,\n";
+  return {subject,body,count:open.length,first,day,od,dated,nd};
+}
+function owTeamsText(o,img){
+  const p=owMailParts(o,true);if(!p)return "";
+  const sd=TODAY.toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+  const head=`Hi ${p.first}, a quick reminder on your open IT follow-ups (as of ${sd}): ${p.count} open${p.od.length?`, ${p.od.length} overdue`:""}. Could you share an update and a revised date for anything overdue?`;
+  if(img)return head+"\n\nThe full list is in the picture below.\n\nThanks!";
+  const all=[...p.od,...p.dated,...p.nd],tail="\n\nThanks!",MAXE=1500;
+  const ln=(d,i)=>`${i+1}. [${d.bu}] ${String(d.d).slice(0,90)} (${d.od?d.days+"d late":d.dueD?"due "+fmt(d.dueD):"no date"}, ${STATUS[d.st].label})`;
+  const out=[];
+  for(let i=0;i<all.length;i++){const c=head+"\n\n"+out.concat(ln(all[i],i)).join("\n")+"\n…and 999 more"+tail;if(encodeURIComponent(c).length>MAXE)break;out.push(ln(all[i],i));}
+  const more=all.length-out.length;
+  return head+"\n\n"+out.join("\n")+(more?`\n…and ${more} more`:"")+tail;
+}
+function owMailLinks(o,toOverride,img){
+  if(img===undefined)img=owWithImg;
+  const pi=owMailParts(o,img),pf=owMailParts(o,false);if(!pi||!pf)return null;
+  const to=(toOverride??OWNER_EMAILS[o]??"").trim();
+  const q=s=>encodeURIComponent(s);
+  const fit=(body,MAX=6000)=>{if(q(body).length<=MAX)return body;
+    const out=[];for(const l of body.split("\n")){if(q(out.concat(l).join("\n")).length>MAX-300)break;out.push(l);}
+    return out.join("\n")+"\n\n…list shortened. Use “Copy email text” in the tracker for the full list.\n\nThanks,\n";};
+  const users=to.split(/[;,]\s*/).filter(Boolean);
+  const teams=users.length?`https://teams.microsoft.com/l/chat/0/0?users=${users.map(u=>q(u).replace(/%40/g,"@")).join(",")}${users.length>1?"&topicName="+q("IT follow-ups"):""}&message=${q(owTeamsText(o,img))}`:"https://teams.microsoft.com/";
+  return {outlook:`https://outlook.office.com/mail/deeplink/compose?to=${q(to)}&subject=${q(pi.subject)}&body=${q(fit(pi.body))}`,
+    teams,full:`To: ${to}\nSubject: ${pf.subject}\n\n${pf.body}`,count:pi.count};
+}
+function owMailBar(o){
+  const L=owMailLinks(o);
+  if(!L)return `<div class="owmail"><span class="note" style="flex-basis:auto">Nothing open to chase for ${esc(o)}.</span></div>`;
+  const tO=OW_READY[o+"|outlook"]||0,tT=OW_READY[o+"|teams"]||0,rdO=owIsReady(o,"outlook"),rdT=owIsReady(o,"teams");
+  const stepMsg=(rdO||rdT)?`✓ Picture copied. Click ${rdT&&tT>=tO?"Open Teams":"Open Outlook"}, click in the message box and press Ctrl+V (⌘V on Mac) to paste it.`:"";
+  return `<div class="owmail" data-mail="${esc(o)}">
+    <label for="om_${esc(owKey(o))}">Email</label>
+    <input id="om_${esc(owKey(o))}" type="text" inputmode="email" autocomplete="off" placeholder="name@company.com; second@company.com" value="${esc(OW_DRAFT[o]??OWNER_EMAILS[o]??"")}" pattern="^\\s*([^\\s@;,]+@[^\\s@;,]+\\.[^\\s@;,]+)(\\s*[;,]\\s*[^\\s@;,]+@[^\\s@;,]+\\.[^\\s@;,]+)*\\s*$" ${canWrite?"":"disabled"} aria-label="Email address for ${esc(o)}">
+    <a class="btn primary" data-k="outlook" href="${esc(L.outlook)}" target="_blank" rel="noopener"${rdO?' data-ready="1"':""}>${rdO?OW_CH.outlook.open:OW_CH.outlook.label}</a>
+    <a class="btn teams" data-k="teams" href="${esc(L.teams)}" target="_blank" rel="noopener"${rdT?' data-ready="1"':""}>${rdT?OW_CH.teams.open:OW_CH.teams.label}</a>
+    <label class="withimg"><input type="checkbox" data-withimg${owWithImg?" checked":""}> include image</label>
+    <button type="button" class="btn" data-copytable title="Copies the list as a formatted table you can paste into Outlook or Teams">Copy table</button>
+    <button type="button" class="btn" data-copyimg>Copy image</button>
+    <button type="button" class="btn" data-saveimg>Save image</button>
+    <button type="button" class="btn" data-copy>Copy email text</button>
+    <span class="saved" hidden>Saved</span>
+    <span class="owstep" role="status"${stepMsg?"":" hidden"}>${stepMsg}</span>
+    <span class="note">Click once: the draft opens with ${esc(o)}'s ${L.count} open item${L.count>1?"s":""} already typed (✉ Outlook in the browser, 💬 Teams in the app or browser). Teams needs the owner's email above. Tick “include image” only if you want a picture: links can't carry pictures, so it is copied and you press Ctrl+V in the message.${m365Active()?" Microsoft 365 is connected: with “include image” ticked, Outlook gets a draft with the picture already inside and Teams shows a preview with a Send button.":""}</span></div>`;
+}
+function owRefreshMail(bar,to){const o=bar.dataset.mail,L=owMailLinks(o,to);if(!L)return;
+  bar.querySelector('[data-k="outlook"]').href=L.outlook;const tl=bar.querySelector('[data-k="teams"]');if(tl)tl.href=L.teams;}
+async function owSaveEmail(o,v){
+  if(OWNER_EMAILS[o]===v)return;
+  if(v)OWNER_EMAILS[o]=v;else delete OWNER_EMAILS[o];
+  if(db){const ref=db.collection("owners").doc(owKey(o));if(v)await ref.set({name:o,email:v});else await ref.delete();}
+  else{try{localStorage.setItem(OEK,JSON.stringify(OWNER_EMAILS))}catch(e){}}
+}
+$("owDetail").addEventListener("input",e=>{const inp=e.target.closest(".owmail input[type=text]");if(!inp)return;const bar=inp.closest(".owmail");
+  const v=inp.value.trim();OW_DRAFT[bar.dataset.mail]=inp.value;if(owEmailOK(v))owRefreshMail(bar,v);});
+$("owDetail").addEventListener("change",async e=>{const inp=e.target.closest(".owmail input[type=text]");if(!inp)return;const bar=inp.closest(".owmail"),o=bar.dataset.mail,v=inp.value.trim();
+  if(!owEmailOK(v)){toast("Check the email address. Separate several with a semicolon.");return;}
+  try{await owSaveEmail(o,v);delete OW_DRAFT[o];owRefreshMail(bar);const s=bar.querySelector(".saved");s.hidden=false;setTimeout(()=>s.hidden=true,1800);}catch(err){dbFail(err,"the email address")}});
+$("owDetail").addEventListener("click",async e=>{const b=e.target.closest("[data-copy]");if(!b)return;const bar=b.closest(".owmail"),iv=bar.querySelector("input").value.trim(),L=owMailLinks(bar.dataset.mail,owEmailOK(iv)?iv:undefined,false);if(!L)return;
+  try{await navigator.clipboard.writeText(L.full);toast("Email text copied. Paste it into Outlook.");}
+  catch(err){const ta=document.createElement("textarea");ta.value=L.full;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();
+    let ok=false;try{ok=document.execCommand("copy")}catch(e2){}ta.remove();toast(ok?"Email text copied. Paste it into Outlook.":"Couldn't copy here. Use Email in Outlook instead.");}});
+$("owDetail").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.closest(".owmail input[type=text]")){e.preventDefault();e.target.blur();}},true);
+
+/* ---------- owner list as an image (for pasting into an email) ---------- */
+function owImageCanvas(o){
+  const m=ownerStats(DATA).find(x=>x.o===o);if(!m)return null;
+  const open=m.items.filter(d=>d.open);if(!open.length)return null;
+  const dn=d=>Math.round((d.dueD-TODAY)/864e5);
+  const od=open.filter(d=>d.od).sort((a,b)=>b.days-a.days);
+  const dated=open.filter(d=>!d.od&&d.dueD).sort((a,b)=>a.dueD-b.dueD);
+  const nd=open.filter(d=>!d.dueD);
+  const S=2,W=940,P=28,F='"Segoe UI",Arial,Helvetica,sans-serif';
+  const cv=document.createElement("canvas"),c=cv.getContext("2d");
+  const font=(w,s)=>`${w} ${s}px ${F}`;
+  const wrap=(txt,maxW,f,max)=>{c.font=f;const words=String(txt||"").replace(/\s+/g," ").trim().split(" ");const L=[];let cur="";
+    for(const w of words){const t=cur?cur+" "+w:w;if(c.measureText(t).width>maxW&&cur){L.push(cur);cur=w}else cur=t}if(cur)L.push(cur);
+    if(L.length>max){L.length=max;let s=L[max-1];while(s.length&&c.measureText(s+"…").width>maxW)s=s.slice(0,-1);L[max-1]=s+"…";}return L;};
+  const X={n:P,due:P+30,bu:P+30+96,item:P+30+96+70,st:W-P-124};const itemW=X.st-X.item-16;
+  const ST={done:["#e2f2e7","#2f8a4e"],prog:["#e3eefb","#1f63b8"],wait:["#fdf1d8","#9a6400"],new:["#eef1f4","#4b5563"],hold:["#efeaf7","#6a4f99"],unset:["#eef1f4","#6b7480"]};
+  const groups=[["OVERDUE",od,"#c93b3b"],["UPCOMING",dated,"#4b5563"],["NO TARGET DATE YET",nd,"#4b5563"]].filter(g=>g[1].length);
+  // layout pass
+  const rows=[];let n=0;
+  groups.forEach(([lab,arr,colr])=>{rows.push({g:lab,colr,count:arr.length,h:30});
+    arr.forEach(d=>{n++;const dl=wrap(d.d,itemW,font(600,14),3),rl=d.r?wrap(d.r,itemW,font(400,12),2):[];
+      rows.push({d,n,dl,rl,h:Math.max(40,12+dl.length*19+(rl.length?4+rl.length*16:0)+12)});});});
+  const headH=P+26+22+18,thH=30,footH=40;
+  const H=headH+thH+rows.reduce((t,r)=>t+r.h,0)+footH;
+  cv.width=W*S;cv.height=H*S;c.scale(S,S);c.textBaseline="alphabetic";
+  const rr=(x,y,w,h,r,fill)=>{c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else{c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}c.fillStyle=fill;c.fill();};
+  c.fillStyle="#ffffff";c.fillRect(0,0,W,H);
+  c.fillStyle="#0f6e78";c.fillRect(0,0,W,5);
+  let y=P+20;
+  c.fillStyle="#141a22";c.font=font(700,21);c.fillText(`IT follow-ups — ${o}`,P,y);
+  y+=24;c.font=font(400,13);c.fillStyle="#4b5563";
+  const day=TODAY.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+  const parts=[`${open.length} open item${open.length>1?"s":""}`];if(od.length)parts.push(`${od.length} overdue`);parts.push(`as of ${day}`);
+  let hx=P;parts.forEach((t,i)=>{const hot=od.length&&i===1;c.font=font(hot?700:400,13);c.fillStyle=hot?"#c93b3b":"#4b5563";c.fillText(t,hx,y);hx+=c.measureText(t).width;
+    if(i<parts.length-1){c.font=font(400,13);c.fillStyle="#4b5563";c.fillText("  ·  ",hx,y);hx+=c.measureText("  ·  ").width;}});
+  y=headH;
+  c.fillStyle="#eef1f4";c.fillRect(P-8,y,W-2*P+16,thH);
+  c.fillStyle="#6b7480";c.font=font(700,11);
+  [["#",X.n],["DUE",X.due],["BU",X.bu],["ITEM / LATEST NOTE",X.item],["STATUS",X.st]].forEach(([t,x])=>c.fillText(t,x,y+19));
+  y+=thH;
+  rows.forEach(r=>{
+    if(r.g){c.fillStyle=r.colr;c.font=font(700,11);c.fillText(`${r.g} · ${r.count}`,X.n,y+20);
+      c.fillStyle="#dde2e8";c.fillRect(P-8,y+r.h-1,W-2*P+16,1);y+=r.h;return;}
+    const d=r.d;
+    c.fillStyle="#7a8491";c.font=font(400,12);c.fillText(String(r.n),X.n,y+26);
+    let bt,bg,fg;if(d.od){bt=`${d.days}d late`;bg="#fbe5e5";fg="#c93b3b"}else if(d.dueD){const k=dn(d);bt=k===0?"Today":fmt(d.dueD);[bg,fg]=k<=14?["#fdf1d8","#9a6400"]:["#eef1f4","#4b5563"]}else{bt="No date";bg="#f3f5f7";fg="#7a8491"}
+    c.font=font(700,12);const bw=Math.min(86,c.measureText(bt).width+14);rr(X.due,y+11,bw,22,4,bg);c.fillStyle=fg;c.fillText(bt,X.due+7,y+26);
+    c.fillStyle="#141a22";c.font=font(700,13);c.fillText(d.bu,X.bu,y+26);
+    let ty=y+26;c.font=font(600,14);c.fillStyle="#141a22";r.dl.forEach(l=>{c.fillText(l,X.item,ty);ty+=19});
+    if(r.rl.length){ty+=2;c.font=font(400,12);c.fillStyle="#6b7480";r.rl.forEach(l=>{c.fillText(l,X.item,ty);ty+=16});}
+    const [sb,sf]=ST[d.st]||ST.unset;const sl=STATUS[d.st].label;c.font=font(700,11);const sw=c.measureText(sl).width+20;
+    rr(X.st,y+11,sw,22,11,sb);c.fillStyle=sf;c.beginPath();c.arc(X.st+9,y+22,3,0,Math.PI*2);c.fill();c.fillText(sl,X.st+15,y+26);
+    c.fillStyle="#e8ecf0";c.fillRect(P-8,y+r.h-1,W-2*P+16,1);
+    y+=r.h;});
+  c.fillStyle="#7a8491";c.font=font(400,11);c.fillText("From the IT Follow-up Tracker · overdue first, then by target date",P,y+24);
+  return cv;
+}
+function owImageBlob(o){const cv=owImageCanvas(o);return cv?new Promise(res=>cv.toBlob(res,"image/png")):Promise.resolve(null);}
+async function owCopyImage(o,fromStep,ch){
+  const cv=owImageCanvas(o);if(!cv)return false;
+  const url=cv.toDataURL("image/png");
+  // 1) synchronous copy of the picture as rich content (works where the async clipboard is blocked)
+  let htmlOk=false;
+  try{
+    const box=document.createElement("div");box.contentEditable="true";box.style.cssText="position:fixed;left:-9999px;top:0;opacity:0";
+    box.innerHTML=`<img src="${url}" width="${cv.width/2}" height="${cv.height/2}" alt="IT follow-ups for ${esc(o)}">`;
+    document.body.appendChild(box);const r=document.createRange();r.selectNodeContents(box);const s=getSelection();s.removeAllRanges();s.addRange(r);
+    htmlOk=document.execCommand("copy");s.removeAllRanges();box.remove();
+  }catch(e){htmlOk=false}
+  // 2) real PNG on the clipboard where the browser allows it (replaces the copy above)
+  let pngOk=false;
+  try{
+    if(navigator.clipboard&&typeof ClipboardItem!=="undefined"){
+      await navigator.clipboard.write([new ClipboardItem({"image/png":new Promise(res=>cv.toBlob(res,"image/png"))})]);pngOk=true;}
+  }catch(e){pngOk=false}
+  if(pngOk){if(fromStep!=="step")toast("Image copied. Paste it into your message with Ctrl+V (⌘V on Mac).");return "png";}
+  if(htmlOk&&fromStep==="step"){toast("Picture copied (basic mode). If Ctrl+V pastes nothing, use Save image and drag the file into the message.");return "html";}
+  owShowImage(o,url,htmlOk,ch||"outlook");
+  return htmlOk?"html":"";
+}
+function owShowImage(o,url,htmlOk,ch){
+  ch=OW_CH[ch]?ch:"outlook";const C=OW_CH[ch];
+  $("imgPrevImg").src=url;$("imgPrevImg").alt=`IT follow-ups for ${o}`;
+  $("imgPrevMsg").textContent=htmlOk?"The picture was copied. Press Ctrl+V (⌘V on Mac) in the message. If nothing pastes, right-click the picture below, choose Copy image, then paste.":"Your browser blocked copying from this page. Right-click the picture below, choose Copy image, then paste it into the message with Ctrl+V. Or use Save image and attach it.";
+  {const bar=[...document.querySelectorAll(".owmail[data-mail]")].find(b=>b.dataset.mail===o),iv=bar?bar.querySelector("input[type=text]").value.trim():"",L=owMailLinks(o,owEmailOK(iv)?iv:undefined,true);
+   const a=$("imgPrevOutlook");a.textContent=C.open;a.href=L?L[ch]:(ch==="teams"?"https://teams.microsoft.com/":"https://outlook.office.com/mail/");}
+  $("imgPrev").dataset.o=o;$("imgPrev").dataset.ch=ch;$("imgPrev").hidden=false;$("scrim").hidden=false;$("imgPrevClose").focus();
+}
+function owHideImage(){$("imgPrev").hidden=true;if(!editing&&!mgrKind)$("scrim").hidden=true;}
+$("imgPrevClose").onclick=owHideImage;
+$("imgPrevOutlook").addEventListener("click",()=>setTimeout(owHideImage,300));
+$("imgPrevSave").onclick=()=>owSaveImage($("imgPrev").dataset.o);
+$("scrim").addEventListener("click",()=>{if(!$("imgPrev").hidden)owHideImage()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("imgPrev").hidden)owHideImage()});
+function owStep(bar,msg){const s=bar.querySelector(".owstep");if(!s)return;s.textContent=msg;s.hidden=!msg;}
+async function owDownload(blob,name){
+  const dl=window.claude?.use?await window.claude.use("downloads").catch(()=>null):null;
+  if(dl){try{await dl.save({filename:name,data:new Uint8Array(await blob.arrayBuffer())});return true;}catch(e){if(e&&e.code!=="declined")toast("Saving isn't available here. Use Copy image.");return false;}}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);return true;
+}
+async function owSaveImage(o){
+  const b=await owImageBlob(o);if(!b)return;
+  const name=`IT_followups_${String(o).replace(/[^A-Za-z0-9_-]+/g,"_")}_${iso(TODAY)}.png`;
+  if(await owDownload(b,name))toast("Saved "+name);
+}
+function owTableHtml(o){
+  const p=owMailParts(o,true);if(!p)return null;
+  const rows=[...p.od,...p.dated,...p.nd];
+  const td="border:1px solid #c9d0d8;padding:4px 8px;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;vertical-align:top";
+  const when=d=>d.od?`<span style="color:#c93b3b;font-weight:600">${d.days}d late</span> (${esc(fmt(d.dueD))})`:d.dueD?esc(fmt(d.dueD)):"No date";
+  return `<table style="border-collapse:collapse"><tr>${["#","BU","Item / latest note","Due","Status"].map(h=>`<th style="${td};background:#eef1f4;text-align:left">${h}</th>`).join("")}</tr>`+
+    rows.map((d,i)=>`<tr><td style="${td}">${i+1}</td><td style="${td}">${esc(d.bu)}</td><td style="${td}">${esc(d.d)}${d.r?`<br><span style="color:#6b7480">${esc(d.r)}</span>`:""}</td><td style="${td}">${when(d)}</td><td style="${td}">${esc(STATUS[d.st].label)}</td></tr>`).join("")+`</table>`;
+}
+async function owCopyTable(o){
+  const html=owTableHtml(o);if(!html){toast("Nothing open to chase for "+o+".");return;}
+  const plain=owMailParts(o,false).body;let ok=false;
+  try{if(navigator.clipboard&&typeof ClipboardItem!=="undefined"){await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([html],{type:"text/html"}),"text/plain":new Blob([plain],{type:"text/plain"})})]);ok=true;}}catch(e){ok=false}
+  if(!ok){try{const box=document.createElement("div");box.contentEditable="true";box.style.cssText="position:fixed;left:-9999px;top:0;opacity:0";box.innerHTML=html;document.body.appendChild(box);
+    const r=document.createRange();r.selectNodeContents(box);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);ok=document.execCommand("copy");sel.removeAllRanges();box.remove();}catch(e){ok=false}}
+  toast(ok?"Table copied. Click in the message box and press Ctrl+V (⌘V on Mac) to paste it.":"Couldn't copy here. Use Copy email text instead.");
+}
+$("owDetail").addEventListener("change",e=>{const cb=e.target.closest("[data-withimg]");if(!cb)return;owWithImg=cb.checked;
+  try{localStorage.setItem("itFollowupTracker.withImg2",cb.checked?"1":"0")}catch(err){}
+  document.querySelectorAll(".owmail [data-withimg]").forEach(x=>x.checked=owWithImg);
+  document.querySelectorAll(".owmail[data-mail]").forEach(b=>owRefreshMail(b));});
+$("owDetail").addEventListener("click",e=>{
+  const bar=e.target.closest(".owmail[data-mail]");if(!bar)return;const o=bar.dataset.mail;
+  const inp=bar.querySelector("input[type=text]"),iv=inp.value.trim(),to=owEmailOK(iv)?iv:"";
+  const a=e.target.closest('[data-k="outlook"],[data-k="teams"]');
+  if(a){
+    const ch=a.dataset.k,C=OW_CH[ch],key=o+"|"+ch,withImg=!!bar.querySelector("[data-withimg]")?.checked;
+    const L=owMailLinks(o,to,withImg);if(!L){e.preventDefault();return;}
+    a.href=L[ch];                                   // always open with the current email / tick state
+    if(ch==="teams"&&!to){e.preventDefault();toast("Type the owner's work email, press Enter, then click again.");inp.focus();return;}
+    if(withImg&&m365Active()){e.preventDefault();m365Run(o,ch,to,bar);return;}
+    if(!withImg||owIsReady(o,ch)){delete OW_READY[key];a.dataset.ready="";a.textContent=C.label;owStep(bar,"");   // let the link open
+      if(ch==="teams"&&!withImg){try{navigator.clipboard.writeText(owTeamsText(o,false)).then(()=>toast("Teams is opening with the message typed in. If the box is empty, press Ctrl+V: the text is already copied."),()=>{})}catch(err){}}
+      return;}
+    e.preventDefault();owStep(bar,"Copying the picture…");
+    const url=L[ch];
+    owCopyImage(o,"step",ch).then(r=>{
+      if(r!=="png"&&r!=="html"){owStep(bar,"");return;}
+      // one click: picture is on the clipboard, now open the message in the same click
+      let w=null;try{w=window.open(url,"_blank");if(w)w.opener=null;}catch(err){w=null}
+      if(w){delete OW_READY[key];a.dataset.ready="";a.textContent=C.label;
+        owStep(bar,`✓ Picture copied and ${C.app} opened. Click in the message box and press Ctrl+V (⌘V on Mac) to paste it.`);}
+      else{OW_READY[key]=Date.now();a.dataset.ready="1";a.textContent=C.open;   // popup blocked: second click opens it
+        owStep(bar,`✓ Picture copied. Your browser blocked the pop-up, so click ${C.open.replace(" ›","")}, then click in the message box and press Ctrl+V.`);a.focus();}
+    });
+    return;}
+  if(e.target.closest("[data-copytable]")){owCopyTable(o);return;}
+  if(e.target.closest("[data-copyimg]")){owCopyImage(o,false);return;}
+  if(e.target.closest("[data-saveimg]")){owSaveImage(o);return;}
+});
+
+/* ---------- Microsoft 365 (Graph): draft email / Teams message with the picture already inside ---------- */
+const M365_KEY="itFollowupTracker.m365",M365_SCOPES=["User.Read","Mail.ReadWrite","Chat.Create","Chat.ReadWrite","ChatMessage.Send"];
+const M365={app:null,account:null};
+const m365Cfg=()=>{try{const c=JSON.parse(localStorage.getItem(M365_KEY)||"null");return c&&c.clientId?c:null}catch(e){return null}};
+const m365Active=()=>!!m365Cfg();
+const m365Uri=()=>location.origin+location.pathname;
+const m365CanHost=()=>location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1";
+function m365Label(){const c=m365Cfg();if(!c)return "🔗 Set up Microsoft 365";return M365.account?"🔗 Microsoft 365: "+(M365.account.name||M365.account.username):"🔗 Microsoft 365: sign in"}
+const m365Refresh=()=>{try{ownerRender()}catch(e){}};
+async function m365Init(){
+  if(M365.app)return M365.app;const c=m365Cfg();if(!c)throw new Error("Microsoft 365 is not set up yet.");
+  if(typeof msal==="undefined")throw new Error("The Microsoft sign-in library did not load. Check your internet connection and reload.");
+  if(!m365CanHost())throw new Error("Microsoft sign-in needs this page to be opened from an https:// address, not from a file.");
+  M365.app=new msal.PublicClientApplication({auth:{clientId:c.clientId,authority:"https://login.microsoftonline.com/"+(c.tenant||"organizations"),redirectUri:m365Uri()},cache:{cacheLocation:"localStorage"}});
+  if(M365.app.initialize)await M365.app.initialize();
+  M365.account=M365.app.getAllAccounts()[0]||null;return M365.app;
+}
+async function m365SignIn(){const app=await m365Init();const r=await app.loginPopup({scopes:M365_SCOPES,prompt:"select_account"});M365.account=r.account;m365Refresh();return r.account;}
+async function m365Token(){
+  const app=await m365Init();if(!M365.account)throw new Error("Not signed in to Microsoft 365.");
+  try{return (await app.acquireTokenSilent({scopes:M365_SCOPES,account:M365.account})).accessToken}
+  catch(e){return (await app.acquireTokenPopup({scopes:M365_SCOPES,account:M365.account})).accessToken}
+}
+async function gx(path,opt){
+  opt=opt||{};const t=await m365Token();
+  const r=await fetch("https://graph.microsoft.com/v1.0"+path,{...opt,headers:{Authorization:"Bearer "+t,"Content-Type":"application/json",...(opt.headers||{})}});
+  if(!r.ok){let m="";try{const j=await r.json();m=(j.error&&j.error.message)||""}catch(e){}throw new Error("Microsoft said "+r.status+(m?": "+m:""))}
+  return r.status===204?null:r.json();
+}
+const owEmails=to=>String(to||"").split(/[;,]\s*/).map(x=>x.trim()).filter(Boolean);
+const owPng=o=>{const cv=owImageCanvas(o);return cv?cv.toDataURL("image/png").split(",")[1]:null};
+function owStepLink(bar,msg,url,label){const s=bar.querySelector(".owstep");if(!s)return;s.textContent=msg+" ";const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";a.textContent=label;s.appendChild(a);s.hidden=false;}
+async function m365OutlookDraft(o,to){
+  const p=owMailParts(o,true),png=owPng(o);if(!p||!png)throw new Error("Nothing open to chase for "+o+".");
+  const html=`<div style="font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#141a22"><p>Hi ${esc(p.first)},</p><p>Please share a quick update on the open items below, as of ${esc(p.day)}. A revised target date for anything overdue would help.</p><p><img src="cid:followups" alt="Open IT follow-ups for ${esc(o)}" style="max-width:100%;height:auto"></p><p>Thanks,</p></div>`;
+  const msg=await gx("/me/messages",{method:"POST",body:JSON.stringify({subject:p.subject,body:{contentType:"HTML",content:html},
+    toRecipients:owEmails(to).map(a=>({emailAddress:{address:a}})),
+    attachments:[{"@odata.type":"#microsoft.graph.fileAttachment",name:"followups.png",contentType:"image/png",contentBytes:png,isInline:true,contentId:"followups"}]})});
+  return msg.webLink;
+}
+async function m365TeamsSend(o,to){
+  const text=owTeamsText(o,true),png=owPng(o);if(!text||!png)throw new Error("Nothing open to chase for "+o+".");
+  const me=await gx("/me?$select=id,userPrincipalName");const others=owEmails(to);
+  const bind=u=>({"@odata.type":"#microsoft.graph.aadUserConversationMember",roles:["owner"],"user@odata.bind":"https://graph.microsoft.com/v1.0/users('"+u+"')"});
+  const chat=await gx("/chats",{method:"POST",body:JSON.stringify(others.length>1
+    ?{chatType:"group",topic:"IT follow-ups",members:[bind(me.id),...others.map(bind)]}
+    :{chatType:"oneOnOne",members:[bind(me.id),bind(others[0])]})});
+  const html="<p>"+esc(text).replace(/\n\n/g,"</p><p>").replace(/\n/g,"<br>")+'</p><p><img src="../hostedContents/1/$value" alt="Open IT follow-ups for '+esc(o)+'"></p>';
+  await gx("/chats/"+encodeURIComponent(chat.id)+"/messages",{method:"POST",body:JSON.stringify({body:{contentType:"html",content:html},hostedContents:[{"@microsoft.graph.temporaryId":"1",contentBytes:png,contentType:"image/png"}]})});
+  return chat.webUrl||"https://teams.microsoft.com/";
+}
+async function m365Run(o,ch,to,bar0){
+  const B=()=>[...document.querySelectorAll(".owmail[data-mail]")].find(x=>x.dataset.mail===o)||bar0;
+  const win=ch==="outlook"?window.open("about:blank","_blank"):null;
+  try{
+    owStep(B(),"Connecting to Microsoft 365…");
+    await m365Init();if(!M365.account)await m365SignIn();
+    if(ch==="outlook"){
+      owStep(B(),"Creating the draft with the picture inside…");
+      const link=await m365OutlookDraft(o,to);
+      if(win&&!win.closed){win.location.href=link;owStep(B(),"✓ Draft created with the picture inside. It is open in a new tab and saved in your Outlook Drafts folder.");}
+      else owStepLink(B(),"✓ Draft created with the picture inside (see your Outlook Drafts folder).",link,"Open the draft ›");
+    }else{owStep(B(),"");m365TeamsPreview(o,to);}
+  }catch(err){
+    try{if(win)win.close()}catch(e2){}
+    console.error(err);owStep(B(),"⚠ "+(err&&err.message||err)+" You can still untick “include image” for a text-only draft, or use Copy image.");
+  }
+}
+function m365TeamsPreview(o,to){
+  const text=owTeamsText(o,true),png=owPng(o);
+  $("tmTo").textContent="To: "+owEmails(to).join(", ")+" · sent as you, so check it first";$("tmText").textContent=text;$("tmImg").src="data:image/png;base64,"+png;$("tmMsg").textContent="";
+  $("tmDlg").dataset.o=o;$("tmDlg").dataset.to=to;$("tmSend").disabled=false;$("tmDlg").hidden=false;$("scrim").hidden=false;$("tmSend").focus();
+}
+function m365CloseTm(){$("tmDlg").hidden=true;if(!editing&&!mgrKind&&$("imgPrev").hidden&&$("m365Dlg").hidden)$("scrim").hidden=true;}
+$("tmClose").onclick=$("tmCancel").onclick=m365CloseTm;
+$("tmSend").onclick=async()=>{const b=$("tmSend");b.disabled=true;$("tmMsg").textContent="Sending…";
+  try{const url=await m365TeamsSend($("tmDlg").dataset.o,$("tmDlg").dataset.to);$("tmMsg").innerHTML="";const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";a.textContent="✓ Sent. Open the chat ›";$("tmMsg").appendChild(a);$("tmSend").textContent="Sent";}
+  catch(err){console.error(err);$("tmMsg").textContent="⚠ "+(err&&err.message||err);b.disabled=false;}};
+function m365Open(){
+  const c=m365Cfg()||{};$("m365Client").value=c.clientId||"";$("m365Tenant").value=c.tenant||"";$("m365Uri").textContent=m365Uri();
+  const w=$("m365Warn");w.hidden=m365CanHost();w.textContent=m365CanHost()?"":"This page is opened from a file or an address Microsoft sign-in cannot use. Host this HTML file at an https:// address (for example your company web server, Azure Static Web Apps or GitHub Pages) and open it from there, then use that address as the redirect URI.";
+  $("m365Status").textContent=M365.account?"Signed in as "+M365.account.username+".":(c.clientId?"Saved. Not signed in yet.":"Not set up yet.");
+  $("m365Dlg").hidden=false;$("scrim").hidden=false;$("m365Client").focus();
+}
+function m365Close(){$("m365Dlg").hidden=true;if(!editing&&!mgrKind&&$("imgPrev").hidden&&$("tmDlg").hidden)$("scrim").hidden=true;}
+function m365SaveCfg(){const clientId=$("m365Client").value.trim(),tenant=$("m365Tenant").value.trim();
+  if(!/^[0-9a-f-]{36}$/i.test(clientId)){toast("The client ID should look like 00000000-0000-0000-0000-000000000000.");return false;}
+  try{localStorage.setItem(M365_KEY,JSON.stringify({clientId,tenant}))}catch(e){toast("Couldn't save here.");return false}
+  M365.app=null;M365.account=null;return true;}
+$("m365Close").onclick=m365Close;
+$("m365Save").onclick=()=>{if(m365SaveCfg()){toast("Saved.");m365Close();m365Refresh();}};
+$("m365In").onclick=async()=>{if(!m365SaveCfg())return;$("m365Status").textContent="Opening the Microsoft sign-in window…";
+  try{const a=await m365SignIn();$("m365Status").textContent="Signed in as "+a.username+". You can close this window.";}catch(err){console.error(err);$("m365Status").textContent="⚠ "+(err&&err.message||err);}};
+$("m365Out").onclick=async()=>{try{if(M365.app&&M365.account)await M365.app.logoutPopup({account:M365.account})}catch(e){}
+  try{localStorage.removeItem(M365_KEY)}catch(e){}M365.app=null;M365.account=null;$("m365Client").value="";$("m365Tenant").value="";$("m365Status").textContent="Signed out and cleared.";m365Refresh();};
+$("owDetail").addEventListener("click",e=>{if(e.target.closest("[data-m365]"))m365Open()});
+$("scrim").addEventListener("click",()=>{if(!$("m365Dlg").hidden)m365Close();if(!$("tmDlg").hidden)m365CloseTm();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("m365Dlg").hidden)m365Close();if(!$("tmDlg").hidden)m365CloseTm();}});
+if(m365Cfg()&&m365CanHost()&&typeof msal!=="undefined")m365Init().then(m365Refresh).catch(()=>{});
+
+/* ---------- boot ---------- */
+if(READONLY){$("editHint").hidden=true;document.querySelector("tbody").style.cursor="default";ITEMS=LIVE_ROWS;canWrite=false;["addBtn","impBtn","expBtn"].forEach(id=>$(id).hidden=true);reload();setMode("snapshot");}
+else{ITEMS=seedItems();reload();}
+if(location.hash==="#owners")setTab("owners");
+function dayRoll(){const t=new Date();t.setHours(0,0,0,0);if(t.getTime()!==TODAY.getTime()){TODAY=t;reload();try{qfRender()}catch(e){}}}
+setInterval(dayRoll,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)dayRoll()});
+(async()=>{if(READONLY)return;
+  let live=null;
+  try{live=window.claude?.use?await window.claude.use("db"):null;}catch(e){live=null}
+  if(!live){try{OWNER_EMAILS=JSON.parse(localStorage.getItem(OEK)||"{}")||{}}catch(e){OWNER_EMAILS={}}
+    try{ownerRender()}catch(e){}
+    setMode("offline");QF_ITEMS=qfLoadLocal();qfRender();const saved=lsLoad();if(Array.isArray(saved)&&saved.length){ITEMS=saved;reload();}return;}
+  db=live;
+  db.collection("owners").onSnapshot(s=>{const m={};s.docs.forEach(d=>{const x=d.data();if(x&&x.name&&x.email)m[x.name]=x.email});OWNER_EMAILS=m;
+    document.querySelectorAll(".owmail[data-mail]").forEach(bar=>{const inp=bar.querySelector("input");if(inp&&document.activeElement!==inp){if(OW_DRAFT[bar.dataset.mail]===undefined)inp.value=OWNER_EMAILS[bar.dataset.mail]||"";owRefreshMail(bar);}});},()=>{});
+  db.collection("followups").onSnapshot(s=>{QF_ITEMS=s.docs.map(d=>({id:d.id,...d.data()}));qfRender();},()=>{});
+  db.collection("items").onSnapshot(snap=>{
+    if(snap.empty&&snap.metadata.fromCache)return;
+    ITEMS=snap.docs.map(d=>({id:d.id,...d.data()}));
+    setMode("live");reload();
+  },err=>{if(err.code==="revoked"){canWrite=false;applyWriteState();}toast("Live updates stopped. Reload the page to reconnect.");});
+  try{const u=await window.claude.use("user");const w=u?await u.can("data.write"):null;if(w===false){canWrite=false;applyWriteState();render();}}catch(e){}
+})();
+</script>
+
+</body></html>
